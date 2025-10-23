@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>ACCUMULATOR OPTIONS TRADING SIGNAL ANALYZER</title>
+<title>💵💸ACCUMULATOR OPTIONS TRADING SIGNAL ANALYZER</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -133,11 +133,11 @@
     text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
   }
   .signal-building {
-    background: rgba(0, 238, 255, 0.15);
-    color: #00ff9d;
-    border: 1px solid rgba(0, 255, 179, 0.5);
-    box-shadow: 0 0 10px rgba(0, 255, 47, 0.3);
-    text-shadow: 0 0 5px rgba(0, 68, 255, 0.5);
+    background: rgba(255, 165, 0, 0.15);
+    color: #ffa500;
+    border: 1px solid rgba(255, 165, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
     animation: pulse-building 1.5s infinite;
   }
   .signal-weak {
@@ -499,7 +499,10 @@
 
   // ADDED: Signal persistence timing
   const SIGNAL_PERSISTENCE_TIME = 4000; // 4 seconds
-  const BUILDING_SIGNAL_DURATION = 4000; // 4 seconds for BUILDING SIGNAL
+
+  // ADDED: Ranging market detection parameters
+  const RANGING_THRESHOLD = 0.001; // 0.1% threshold for price difference
+  const RANGING_CONFIRMATION_COUNT = 3; // Number of consecutive ticks needed to confirm ranging
 
   // SIMULATED DATA FOR TESTING
   let simulatedDataCount = 0;
@@ -536,8 +539,7 @@
       volatilityNum = parseInt(match[1]);
     }
     
-    // MODIFIED: Create more consolidating price action for testing
-    const volatility = volatilityNum / 2000; // Reduced volatility for consolidation
+    const volatility = volatilityNum / 1000;
     const change = (Math.random() - 0.5) * volatility * basePrice;
     const newPrice = basePrice + change;
     
@@ -661,12 +663,11 @@
     }
   }
   
-  // Enhanced Price Action Analyzer for Consolidation Detection
+  // Price Action Analyzer
   class PriceActionAnalyzer {
     constructor() {
       this.prices = [];
-      this.maxHistory = 50;
-      this.consolidationScore = 0;
+      this.maxHistory = 20;
     }
     
     update(price) {
@@ -675,57 +676,23 @@
         this.prices.shift();
       }
       
-      if (this.prices.length < 10) {
+      if (this.prices.length < 5) {
         return null;
       }
       
-      // Calculate price range and volatility
-      const recentPrices = this.prices.slice(-20);
-      const high = Math.max(...recentPrices);
-      const low = Math.min(...recentPrices);
-      const range = high - low;
+      const recentPrices = this.prices.slice(-5);
       const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
-      
-      // Calculate price volatility (standard deviation)
       const priceVariance = recentPrices.reduce((a, b) => a + Math.pow(b - avgPrice, 2), 0) / recentPrices.length;
       const priceStdDev = Math.sqrt(priceVariance);
-      const volatility = priceStdDev / avgPrice * 100;
       
-      // Calculate trend strength using linear regression
-      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-      const n = recentPrices.length;
-      for (let i = 0; i < n; i++) {
-        sumX += i;
-        sumY += recentPrices[i];
-        sumXY += i * recentPrices[i];
-        sumX2 += i * i;
-      }
-      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-      const trendStrength = Math.abs(slope / avgPrice * 1000); // Normalized trend strength
-      
-      // Calculate consolidation metrics
-      const priceOscillation = (range / avgPrice) * 100;
-      const isConsolidating = priceOscillation < 0.5 && volatility < 0.3 && trendStrength < 0.1;
-      
-      // Update consolidation score
-      if (isConsolidating) {
-        this.consolidationScore = Math.min(this.consolidationScore + 1, 10);
-      } else {
-        this.consolidationScore = Math.max(this.consolidationScore - 2, 0);
-      }
-      
-      const trend = slope > 0.01 ? 'up' : slope < -0.01 ? 'down' : 'neutral';
-      const momentum = (this.prices[this.prices.length - 1] - this.prices[this.prices.length - 10]) / this.prices[this.prices.length - 10] * 100;
+      const trend = this.prices[this.prices.length - 1] > this.prices[this.prices.length - 5] ? 'up' : 'down';
+      const momentum = (this.prices[this.prices.length - 1] - this.prices[this.prices.length - 5]) / this.prices[this.prices.length - 5] * 100;
       
       return {
         trend,
         momentum,
-        volatility,
-        trendStrength,
-        priceOscillation,
-        isConsolidating: this.consolidationScore >= 5,
-        consolidationScore: this.consolidationScore,
-        isPerfectConsolidation: this.consolidationScore >= 8 && trendStrength < 0.05 && priceOscillation < 0.3
+        volatility: priceStdDev / avgPrice * 100,
+        isConsolidating: priceStdDev / avgPrice < 0.01
       };
     }
   }
@@ -769,9 +736,6 @@
         (macdLine - this.history[this.history.length - 2].macdLine) - 
         (this.history[this.history.length - 2].macdLine - this.history[this.history.length - 3].macdLine) : 0;
       
-      // Check for neutral/consolidating MACD
-      const isNeutral = Math.abs(macdLine) < 0.02 && Math.abs(histogram) < 0.01;
-      
       return {
         macdLine,
         signalLine,
@@ -781,9 +745,7 @@
         momentum,
         acceleration,
         isBullish: macdLine > signalLine && histogram > 0,
-        isBearish: macdLine < signalLine && histogram < 0,
-        isNeutral: isNeutral,
-        isConsolidating: isNeutral && Math.abs(momentum) < 0.005
+        isBearish: macdLine < signalLine && histogram < 0
       };
     }
     
@@ -851,16 +813,7 @@
         this.history.shift();
       }
       
-      // Check for neutral RSI (ideal for consolidation)
-      const isNeutral = this.rsi > 45 && this.rsi < 55;
-      
-      return {
-        value: this.rsi,
-        isNeutral: isNeutral,
-        isOverbought: this.rsi > 70,
-        isOversold: this.rsi < 30,
-        momentum: this.getMomentum()
-      };
+      return this.rsi;
     }
     
     getMomentum() {
@@ -925,13 +878,9 @@
         }
       }
       
-      // Check for neutral stochastic (ideal for consolidation)
-      const isNeutral = k > 40 && k < 60;
-      
       return { 
         k, 
         d,
-        isNeutral: isNeutral,
         isOverbought: k > 80,
         isOversold: k < 20,
         crossover: this.kValues.length >= 2 && 
@@ -1028,9 +977,6 @@
       
       const trendMomentum = this.adxHistory.length >= 2 ? this.adx - this.adxHistory[this.adxHistory.length - 2] : 0;
       
-      // Check for weak/no trend (ideal for consolidation)
-      const isNoTrend = this.adx < 15;
-      
       return {
         plusDI,
         minusDI,
@@ -1039,8 +985,7 @@
         trendDirection: plusDI > minusDI ? 'up' : 'down',
         trendMomentum,
         isTrending: this.adx > 20,
-        diCrossover: plusDI > minusDI && this.adx > 20,
-        isNoTrend: isNoTrend
+        diCrossover: plusDI > minusDI && this.adx > 20
       };
     }
   }
@@ -1074,21 +1019,15 @@
       const bandwidth = (this.multiplier * stdDev * 2) / sma * 100;
       const percentB = (price - lower) / (upper - lower);
       
-      // Check for squeeze and middle position (ideal for consolidation)
-      const isMiddle = percentB > 0.4 && percentB < 0.6;
-      const isSqueeze = bandwidth < 8;
-      
       return {
         upper,
         middle: sma,
         lower,
         bandwidth,
         percentB,
-        isSqueeze: isSqueeze,
+        isSqueeze: bandwidth < 10,
         isExpanding: bandwidth > 15,
-        position: percentB < 0.2 ? 'lower' : percentB > 0.8 ? 'upper' : 'middle',
-        isMiddle: isMiddle,
-        isPerfectConsolidation: isMiddle && isSqueeze
+        position: percentB < 0.2 ? 'lower' : percentB > 0.8 ? 'upper' : 'middle'
       };
     }
   }
@@ -1100,7 +1039,6 @@
       this.maxHistory = 50;
       this.consolidationCount = 0;
       this.stablePeriodCount = 0;
-      this.perfectConsolidationCount = 0;
     }
     
     update(price, growthRate, symbolRanges) {
@@ -1119,33 +1057,17 @@
         this.rangeAnalysis.shift();
       }
       
-      // Enhanced consolidation detection
-      if (this.rangeAnalysis.length >= 15) {
-        const recentPrices = this.rangeAnalysis.slice(-15).map(item => item.price);
+      // Check for consolidation
+      if (this.rangeAnalysis.length >= 10) {
+        const recentPrices = this.rangeAnalysis.slice(-10).map(item => item.price);
         const high = Math.max(...recentPrices);
         const low = Math.min(...recentPrices);
         const rangeSize = (high - low) / price * 100;
-        const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
         
-        // Calculate price deviation from average
-        const deviations = recentPrices.map(p => Math.abs(p - avgPrice) / avgPrice * 100);
-        const avgDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
-        
-        // Perfect consolidation: very small range and minimal deviation
-        const isPerfectConsolidation = rangeSize < rangePercent * 0.3 && avgDeviation < 0.15;
-        
-        // Regular consolidation
-        const isConsolidating = rangeSize < rangePercent * 0.5;
-        
-        if (isPerfectConsolidation) {
-          this.perfectConsolidationCount++;
+        if (rangeSize < rangePercent * 0.5) {
           this.consolidationCount++;
-        } else if (isConsolidating) {
-          this.consolidationCount++;
-          this.perfectConsolidationCount = Math.max(0, this.perfectConsolidationCount - 1);
         } else {
-          this.consolidationCount = Math.max(0, this.consolidationCount - 2);
-          this.perfectConsolidationCount = Math.max(0, this.perfectConsolidationCount - 2);
+          this.consolidationCount = Math.max(0, this.consolidationCount - 1);
         }
       }
       
@@ -1153,8 +1075,7 @@
         rangePercent,
         upperBarrier: price * (1 + rangePercent/100),
         lowerBarrier: price * (1 - rangePercent/100),
-        isConsolidating: this.consolidationCount >= 5,
-        isPerfectConsolidation: this.perfectConsolidationCount >= 3
+        isConsolidating: this.consolidationCount >= 5
       };
     }
     
@@ -1186,7 +1107,7 @@
       const overallStability = (rangeStability * 0.5 + maxVolatilityStability * 0.3 + midPositionStability * 0.2);
       
       // Track stable periods
-      if (overallStability > 0.8) {
+      if (overallStability > 0.7) {
         this.stablePeriodCount++;
       } else {
         this.stablePeriodCount = Math.max(0, this.stablePeriodCount - 1);
@@ -1198,9 +1119,67 @@
         avgVolatility,
         maxVolatility,
         rangePercent,
-        isLowVolatility: avgVolatility < rangePercent * 0.2,
-        stablePeriods: this.stablePeriodCount,
-        isPerfectStability: overallStability > 0.9 && avgVolatility < rangePercent * 0.15
+        isLowVolatility: avgVolatility < rangePercent * 0.3,
+        stablePeriods: this.stablePeriodCount
+      };
+    }
+  }
+  
+  // ADDED: Ranging Market Detector
+  class RangingMarketDetector {
+    constructor() {
+      this.priceHistory = [];
+      this.maxHistory = 10;
+      this.rangingCount = 0;
+      this.lastPrice = null;
+    }
+    
+    update(currentPrice) {
+      // Add current price to history
+      this.priceHistory.push(currentPrice);
+      if (this.priceHistory.length > this.maxHistory) {
+        this.priceHistory.shift();
+      }
+      
+      // Check if we have enough data
+      if (this.priceHistory.length < 2) {
+        this.lastPrice = currentPrice;
+        return { isRanging: false, confidence: 0 };
+      }
+      
+      // Calculate price differences between consecutive ticks
+      let totalDifference = 0;
+      let maxDifference = 0;
+      
+      for (let i = 1; i < this.priceHistory.length; i++) {
+        const difference = Math.abs(this.priceHistory[i] - this.priceHistory[i-1]);
+        totalDifference += difference;
+        maxDifference = Math.max(maxDifference, difference);
+      }
+      
+      const avgDifference = totalDifference / (this.priceHistory.length - 1);
+      const percentageDifference = (avgDifference / currentPrice) * 100;
+      
+      // Check if the market is ranging
+      const isRanging = percentageDifference < RANGING_THRESHOLD;
+      
+      // Update ranging count
+      if (isRanging) {
+        this.rangingCount = Math.min(this.rangingCount + 1, RANGING_CONFIRMATION_COUNT);
+      } else {
+        this.rangingCount = Math.max(0, this.rangingCount - 1);
+      }
+      
+      // Calculate confidence based on consecutive ranging ticks
+      const confidence = this.rangingCount / RANGING_CONFIRMATION_COUNT;
+      
+      this.lastPrice = currentPrice;
+      
+      return {
+        isRanging: this.rangingCount >= RANGING_CONFIRMATION_COUNT,
+        confidence,
+        avgDifference: percentageDifference,
+        maxDifference: (maxDifference / currentPrice) * 100
       };
     }
   }
@@ -1265,6 +1244,12 @@
         </div>
         <div id="range-bar-${v.symbol}" class="indicator-bar neutral-bar"></div>
         
+        <div class="indicator-row">
+          <span class="indicator-name">Market Ranging</span>
+          <span class="indicator-strength" id="ranging-strength-${v.symbol}">-</span>
+        </div>
+        <div id="ranging-bar-${v.symbol}" class="indicator-bar neutral-bar"></div>
+        
         <div id="signal-text-${v.symbol}" class="signal-area signal-waiting">GATHERING DATA</div>
         <div id="countdown-${v.symbol}" class="countdown">0/${MIN_DATA_POINTS} points</div>
         <div id="signal-explanation-${v.symbol}" class="signal-explanation">Collecting market data...</div>
@@ -1285,14 +1270,13 @@
         williamsCalc: new WilliamsR(14),
         priceActionCalc: new PriceActionAnalyzer(),
         accumulatorAnalyzer: new AccumulatorAnalyzer(),
+        rangingDetector: new RangingMarketDetector(), // ADDED: Ranging market detector
         confirmationCount: 0,
         strongConfirmationCount: 0,
         lastSignal: null,
         lastStrongSignalTime: 0,
         lastTradeSignalTime: 0,
-        lastBuildingSignalTime: 0,
         consolidationCount: 0,
-        perfectConsolidationCount: 0,
         growthRate: v.growthRate,
         symbolRanges: v.ranges,
         ui: {
@@ -1318,6 +1302,8 @@
           trendBar: card.querySelector(`#trend-bar-${v.symbol}`),
           rangeStrength: card.querySelector(`#range-strength-${v.symbol}`),
           rangeBar: card.querySelector(`#range-bar-${v.symbol}`),
+          rangingStrength: card.querySelector(`#ranging-strength-${v.symbol}`), // ADDED
+          rangingBar: card.querySelector(`#ranging-bar-${v.symbol}`), // ADDED
           explanation: card.querySelector(`#signal-explanation-${v.symbol}`),
           tradeAdvice: card.querySelector(`#trade-advice-${v.symbol}`),
           accumulatorInfo: card.querySelector(`#accumulator-info-${v.symbol}`)
@@ -1440,6 +1426,7 @@
     const priceAction = d.priceActionCalc.update(price);
     const accumulatorAnalysis = d.accumulatorAnalyzer.update(price, d.growthRate, d.symbolRanges);
     const rangeStability = d.accumulatorAnalyzer.analyzeRangeStability(d.closes, price, d.growthRate, d.symbolRanges);
+    const rangingMarket = d.rangingDetector.update(price); // ADDED: Get ranging market status
     
     // Update indicator displays
     if (macd) {
@@ -1447,12 +1434,12 @@
       d.ui.signalLine.textContent = macd.signalLine.toFixed(4);
       d.ui.histogram.textContent = macd.histogram.toFixed(4);
       d.ui.macdStrength.textContent = `${Math.round(macd.strength * 100)}%`;
-      d.ui.macdBar.className = `indicator-bar ${macd.isNeutral ? 'neutral-bar' : macd.direction === 'up' ? 'positive-bar' : 'negative-bar'}`;
+      d.ui.macdBar.className = `indicator-bar ${macd.direction === 'up' ? 'positive-bar' : 'negative-bar'}`;
       d.ui.macdBar.style.width = `${macd.strength * 100}%`;
     }
     
     if (rsi !== null) {
-      d.ui.rsi.textContent = rsi.value.toFixed(1);
+      d.ui.rsi.textContent = rsi.toFixed(1);
     }
     
     if (stoch.k !== null && stoch.d !== null) {
@@ -1463,7 +1450,7 @@
       d.ui.adx.textContent = `${adx.adx.toFixed(1)} (${adx.trendDirection})`;
       const trendStrengthValue = Math.min(adx.adx / 50, 1);
       d.ui.trendStrength.textContent = `${adx.trendStrength}`;
-      d.ui.trendBar.className = `indicator-bar ${adx.isNoTrend ? 'neutral-bar' : adx.trendDirection === 'up' ? 'positive-bar' : 'negative-bar'}`;
+      d.ui.trendBar.className = `indicator-bar ${adx.trendDirection === 'up' ? 'positive-bar' : 'negative-bar'}`;
       d.ui.trendBar.style.width = `${trendStrengthValue * 100}%`;
     }
     
@@ -1484,7 +1471,7 @@
     
     if (priceAction !== null) {
       d.ui.trend.textContent = priceAction.trend;
-      d.ui.trend.style.color = priceAction.trend === 'up' ? '#44ff44' : priceAction.trend === 'down' ? '#ff4444' : '#ffaa00';
+      d.ui.trend.style.color = priceAction.trend === 'up' ? '#44ff44' : '#ff4444';
     }
     
     // Update range stability
@@ -1492,13 +1479,18 @@
     d.ui.rangeBar.className = `indicator-bar ${rangeStability.stable ? 'positive-bar' : 'negative-bar'}`;
     d.ui.rangeBar.style.width = `${rangeStability.confidence * 100}%`;
     
+    // ADDED: Update ranging market indicator
+    d.ui.rangingStrength.textContent = `${Math.round(rangingMarket.confidence * 100)}%`;
+    d.ui.rangingBar.className = `indicator-bar ${rangingMarket.isRanging ? 'positive-bar' : 'negative-bar'}`;
+    d.ui.rangingBar.style.width = `${rangingMarket.confidence * 100}%`;
+    
     d.ui.accumulatorInfo.textContent = 
       `Range: ±${d.symbolRanges[d.growthRate]}% | Volatility: ${rangeStability.avgVolatility ? rangeStability.avgVolatility.toFixed(4) : '0.0000'}%`;
     
     d.ui.countdown.textContent = `${d.closes.length}/${MIN_DATA_POINTS} points`;
     
     if (d.closes.length >= MIN_DATA_POINTS) {
-      generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis);
+      generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis, rangingMarket);
     } else {
       const progress = Math.min(d.closes.length / MIN_DATA_POINTS, 1);
       d.ui.signalText.textContent = `GATHERING DATA ${Math.round(progress * 100)}%`;
@@ -1508,7 +1500,7 @@
     }
   }
   
-  function generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis) {
+  function generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis, rangingMarket) {
     let signalStrength = 0;
     let signalDirection = null;
     let confirmationReasons = [];
@@ -1516,23 +1508,7 @@
     
     const currentTime = Date.now();
     
-    // Check if we should maintain BUILDING SIGNAL for 4 seconds
-    if (d.lastBuildingSignalTime > 0 && (currentTime - d.lastBuildingSignalTime) < BUILDING_SIGNAL_DURATION) {
-      // Maintain BUILDING SIGNAL for 4 seconds
-      d.ui.signalText.textContent = 'BUILDING SIGNAL';
-      d.ui.signalText.className = 'signal-area signal-building';
-      d.ui.countdown.textContent = `Confirming ${d.confirmationCount}/${REGULAR_CONFIRMATION_PERIOD}`;
-      d.ui.tradeAdvice.textContent = 'Monitoring market stability...';
-      d.ui.signalQuality.textContent = 'ANALYZING...';
-      return;
-    }
-    
-    // Reset building signal timer if duration is over
-    if (d.lastBuildingSignalTime > 0 && (currentTime - d.lastBuildingSignalTime) >= BUILDING_SIGNAL_DURATION) {
-      d.lastBuildingSignalTime = 0;
-    }
-    
-    // Check if we should maintain ANY trade signal for 4 seconds
+    // MODIFIED: Check if we should maintain ANY trade signal for 4 seconds
     if ((d.lastStrongSignalTime > 0 && (currentTime - d.lastStrongSignalTime) < SIGNAL_PERSISTENCE_TIME) ||
         (d.lastTradeSignalTime > 0 && (currentTime - d.lastTradeSignalTime) < SIGNAL_PERSISTENCE_TIME)) {
       // Maintain the current signal for 4 seconds
@@ -1547,44 +1523,17 @@
       d.lastTradeSignalTime = 0;
     }
     
-    // ENHANCED: Perfect consolidation detection (100% no trend)
-    const isPerfectConsolidation = 
-      priceAction && priceAction.isPerfectConsolidation &&
-      macd && macd.isNeutral &&
-      rsi && rsi.isNeutral &&
-      adx && adx.isNoTrend &&
-      bb && bb.isPerfectConsolidation &&
-      stoch && stoch.isNeutral &&
-      rangeStability.isPerfectStability &&
-      accumulatorAnalysis.isPerfectConsolidation;
-    
-    // ENHANCED: Strong consolidation detection
-    const isStrongConsolidation = 
-      priceAction && priceAction.isConsolidating &&
-      macd && (macd.isNeutral || macd.strength < 0.2) &&
-      rsi && rsi.isNeutral &&
-      adx && adx.isNoTrend &&
-      bb && bb.isMiddle &&
-      stoch && stoch.isNeutral &&
-      rangeStability.stable &&
-      accumulatorAnalysis.isConsolidating;
-    
-    // 1. Perfect Consolidation (100% no trend) - Highest priority
-    if (isPerfectConsolidation) {
-      signalStrength += 0.4;
-      signalDirection = 'trade';
-      confirmationReasons.push(`PERFECT CONSOLIDATION (100% No Trend)`);
-      d.perfectConsolidationCount++;
-    } 
-    // 2. Strong Consolidation
-    else if (isStrongConsolidation) {
+    // ADDED: Ranging market condition (MOST IMPORTANT - 30% weight)
+    if (rangingMarket.isRanging && rangingMarket.confidence > 0.8) {
       signalStrength += 0.3;
       signalDirection = 'trade';
-      confirmationReasons.push(`Strong Consolidation`);
-      d.consolidationCount++;
+      confirmationReasons.push(`Market ranging (${Math.round(rangingMarket.confidence * 100)}%)`);
+    } else if (!rangingMarket.isRanging) {
+      signalStrength -= 0.2;
+      warningReasons.push(`Market trending (${rangingMarket.avgDifference.toFixed(4)}% avg change)`);
     }
     
-    // 3. Range stability (important for accumulators) - 20% weight
+    // 1. Range stability (important for accumulators) - 20% weight
     if (rangeStability.stable && rangeStability.isLowVolatility && rangeStability.stablePeriods >= 3) {
       signalStrength += 0.2 * rangeStability.confidence;
       signalDirection = signalDirection || 'trade';
@@ -1593,18 +1542,18 @@
       warningReasons.push(`Unstable range`);
     }
     
-    // 4. Choppiness Index - 10% weight (low-medium choppiness is good for range-bound)
-    if (choppiness !== null && choppiness < 45) {
+    // 2. Choppiness Index - 10% weight (low choppiness is good for range-bound)
+    if (choppiness !== null && choppiness < 38) {
       signalStrength += 0.1;
       signalDirection = signalDirection || 'trade';
       confirmationReasons.push(`Low choppiness (${choppiness.toFixed(1)})`);
     } else if (choppiness !== null && choppiness > 62) {
-      signalStrength -= 0.1;
+      signalStrength -= 0.05;
       warningReasons.push(`High choppiness`);
     }
     
-    // 5. MACD - 10% weight (neutral/weak signals preferred)
-    if (macd && macd.isNeutral) {
+    // 3. MACD - 10% weight (neutral/weak signals preferred)
+    if (macd && macd.direction === 'neutral' && Math.abs(macd.histogram) < 0.04) {
       signalStrength += 0.1;
       signalDirection = signalDirection || 'trade';
       confirmationReasons.push(`MACD neutral`);
@@ -1613,28 +1562,53 @@
       signalDirection = signalDirection || 'trade';
       confirmationReasons.push(`MACD weak trend`);
     } else if (macd && macd.strength > 0.5) {
-      signalStrength -= 0.1;
+      signalStrength -= 0.05;
       warningReasons.push(`Strong MACD trend`);
     }
     
-    // 6. RSI - 5% weight (neutral levels preferred)
-    if (rsi && rsi.isNeutral) {
-      signalStrength += 0.05;
+    // 4. RSI - 8% weight (neutral levels preferred)
+    if (rsi !== null && rsi > 46 && rsi < 54) {
+      signalStrength += 0.08;
       signalDirection = signalDirection || 'trade';
-      confirmationReasons.push(`RSI neutral (${rsi.value.toFixed(1)})`);
-    } else if (rsi && (rsi.isOverbought || rsi.isOversold)) {
-      signalStrength -= 0.05;
+      confirmationReasons.push(`RSI neutral (${rsi.toFixed(1)})`);
+    } else if (rsi !== null && (rsi < 38 || rsi > 62)) {
+      signalStrength -= 0.03;
       warningReasons.push(`Extreme RSI`);
     }
     
-    // 7. ADX - 5% weight (no trend preferred)
-    if (adx && adx.isNoTrend) {
-      signalStrength += 0.05;
+    // 5. ADX - 8% weight (weak trends preferred)
+    if (adx && adx.trendStrength === 'weak' && !adx.isTrending && adx.adx < 18) {
+      signalStrength += 0.08;
       signalDirection = signalDirection || 'trade';
-      confirmationReasons.push(`No trend (ADX: ${adx.adx.toFixed(1)})`);
+      confirmationReasons.push(`Weak trend`);
     } else if (adx && adx.trendStrength === 'strong') {
-      signalStrength -= 0.1;
+      signalStrength -= 0.05;
       warningReasons.push(`Strong trend`);
+    }
+    
+    // 6. Bollinger Bands - 7% weight (middle position preferred)
+    if (bb && bb.percentB > 0.42 && bb.percentB < 0.58 && bb.isSqueeze) {
+      signalStrength += 0.07;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`BB squeeze middle`);
+    } else if (bb && bb.percentB > 0.38 && bb.percentB < 0.62) {
+      signalStrength += 0.03;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`BB middle`);
+    }
+    
+    // 7. Williams %R - 4% weight (neutral preferred)
+    if (williams !== null && williams > -58 && williams < -42) {
+      signalStrength += 0.04;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Williams neutral`);
+    }
+    
+    // 8. Price Action - 3% weight (consolidation preferred)
+    if (priceAction && priceAction.isConsolidating && Math.abs(priceAction.momentum) < 0.8) {
+      signalStrength += 0.03;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Price consolidating`);
     }
     
     // Apply warnings
@@ -1677,35 +1651,32 @@
     }
     d.ui.explanation.textContent = explanation || 'Market conditions not optimal';
     
-    // PERFECT TRADE ACCUMULATOR conditions (100% consolidation)
-    const hasPerfectConsolidation = isPerfectConsolidation && d.perfectConsolidationCount >= 2;
-    
-    // STRONG TRADE ACCUMULATOR conditions
-    const hasVeryStrongConfirmations = confirmationReasons.length >= 5;
+    // STRONG TRADE ACCUMULATOR conditions (very strict)
+    const hasVeryStrongConfirmations = confirmationReasons.length >= 6;
     const hasNoCriticalWarnings = warningReasons.length === 0;
     const isHighlyStable = rangeStability.confidence > 0.85 && rangeStability.stablePeriods >= 5;
+    const hasPerfectIndicators = choppiness !== null && choppiness < 32 && 
+                                rsi !== null && rsi > 48 && rsi < 52 &&
+                                bb && bb.percentB > 0.45 && bb.percentB < 0.55;
+    const isDefinitelyRanging = rangingMarket.isRanging && rangingMarket.confidence > 0.9; // ADDED
     
-    // REGULAR TRADE ACCUMULATOR conditions
-    const hasStrongConfirmations = confirmationReasons.length >= 4;
+    // REGULAR TRADE ACCUMULATOR conditions (much stricter now)
+    const hasStrongConfirmations = confirmationReasons.length >= 5;
     const hasMinimalWarnings = warningReasons.length <= 1;
-    const isVeryStable = rangeStability.confidence > 0.75 && rangeStability.stablePeriods >= 3;
+    const isVeryStable = rangeStability.confidence > 0.78 && rangeStability.stablePeriods >= 3;
+    const hasGoodIndicators = choppiness !== null && choppiness < 42 && 
+                             rsi !== null && rsi > 44 && rsi < 56 &&
+                             bb && bb.percentB > 0.4 && bb.percentB < 0.6;
+    const isClearlyRanging = rangingMarket.isRanging && rangingMarket.confidence > 0.8; // ADDED
     
-    // PERFECT TRADE ACCUMULATOR - 100% Consolidation
-    if (hasPerfectConsolidation && d.confirmationCount >= 2) {
-      d.ui.signalText.textContent = 'PERFECT TRADE ACCUMULATOR';
-      d.ui.signalText.className = 'signal-area signal-strong-trade';
-      d.ui.countdown.textContent = `100% CONSOLIDATION`;
-      d.ui.tradeAdvice.textContent = `Growth: ${d.growthRate}% | Range: ±${d.symbolRanges[d.growthRate]}% | MAXIMUM PROBABILITY`;
-      d.ui.signalQuality.textContent = 'PERFECT CONSOLIDATION - NO TREND';
-      d.lastStrongSignalTime = Date.now();
-      d.lastTradeSignalTime = Date.now();
-    }
-    // STRONG TRADE ACCUMULATOR conditions
-    else if (d.strongConfirmationCount >= STRONG_CONFIRMATION_PERIOD && 
+    // MODIFIED: Added ranging market requirement to both signal types
+    if (d.strongConfirmationCount >= STRONG_CONFIRMATION_PERIOD && 
         signalStrength >= STRONG_THRESHOLD && 
         hasVeryStrongConfirmations &&
         hasNoCriticalWarnings &&
-        isHighlyStable) {
+        isHighlyStable &&
+        hasPerfectIndicators &&
+        isDefinitelyRanging) { // ADDED: Ranging market requirement
       
       d.ui.signalText.textContent = 'STRONG TRADE ACCUMULATOR';
       d.ui.signalText.className = 'signal-area signal-strong-trade';
@@ -1715,12 +1686,14 @@
       d.lastStrongSignalTime = Date.now();
       
     } 
-    // REGULAR TRADE ACCUMULATOR conditions
+    // MODIFIED: Added ranging market requirement to regular trade signal
     else if (d.confirmationCount >= REGULAR_CONFIRMATION_PERIOD && 
              signalStrength >= REGULAR_THRESHOLD &&
              hasStrongConfirmations &&
              hasMinimalWarnings &&
-             isVeryStable) {
+             isVeryStable &&
+             hasGoodIndicators &&
+             isClearlyRanging) { // ADDED: Ranging market requirement
       
       d.ui.signalText.textContent = 'TRADE ACCUMULATOR';
       d.ui.signalText.className = 'signal-area signal-trade';
@@ -1743,9 +1716,6 @@
       d.ui.countdown.textContent = `Confirming ${d.confirmationCount}/${REGULAR_CONFIRMATION_PERIOD}`;
       d.ui.tradeAdvice.textContent = 'Monitoring market stability...';
       d.ui.signalQuality.textContent = 'ANALYZING...';
-      
-      // Set building signal timer to display for 4 seconds
-      d.lastBuildingSignalTime = Date.now();
     }
     else {
       d.ui.signalText.textContent = 'ANALYZING';
@@ -1777,9 +1747,6 @@
           dataStore[symbol].lastSignal = null;
           dataStore[symbol].lastStrongSignalTime = 0;
           dataStore[symbol].lastTradeSignalTime = 0;
-          dataStore[symbol].lastBuildingSignalTime = 0;
-          dataStore[symbol].consolidationCount = 0;
-          dataStore[symbol].perfectConsolidationCount = 0;
           
           const volatility = volatilities.find(v => v.symbol === symbol);
           if (volatility) {
@@ -1792,7 +1759,7 @@
   });
 })();
 </script>
-</body>
+</body> 
 <script>
   // disabling the right click
 
