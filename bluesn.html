@@ -1674,4 +1674,29 @@
 })();
 </script>
 </body>
+<script>
+  // disabling the right click
+
+document.addEventListener('contextmenu', (e) => {
+
+  // disable control
+
+  e.preventDefault()
+  
+
+  document.addEventListener('keydown', (e) => {
+
+    // disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+
+    if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+
+      e.preventDefault()
+
+      return false
+
+    }
+
+  })
+});
+  </script>
 </html>
