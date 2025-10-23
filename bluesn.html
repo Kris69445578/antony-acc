@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>ACCUMULATOR OPTIONS TRADING SIGNAL ANALYZER</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #121212; 
+    color: #eee;
+    padding: 8px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #app {
+    height: calc(100vh - 16px);
+    max-width: 100%;
+    background: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 87, 255, 0.6);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+  header {
+    padding: 10px;
+    font-size: clamp(14px, 4vw, 18px);
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(90deg,#0057ff,#00c8ff);
+    color: white;
+  }
+  .main-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+    padding: 8px;
+    overflow-y: auto;
+    height: 100%;
+  }
+  .vol-card {
+    background: #252525;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+  }
+  .vol-title {
+    font-size: clamp(12px, 3vw, 14px);
+    color: #7db8ff;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    font-size: clamp(10px, 2.5vw, 12px);
+  }
+  .data-item {
+    display: flex;
+    justify-content: space-between;
+  }
+  .data-label {
+    color: #7db8ff;
+  }
+  .indicator-value {
+    font-weight: 600;
+    color: white;
+  }
+  .growth-rate-selector {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .growth-rate-btn {
+    background: #121212;
+    border: 1px solid #0057ff;
+    border-radius: 6px;
+    color: white;
+    padding: 4px 2px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .growth-rate-btn.active {
+    background: #0057ff;
+    color: white;
+  }
+  .accumulator-info {
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 87, 255, 0.1);
+    border-radius: 6px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    color: #7db8ff;
+  }
+  .signal-area {
+    margin-top: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    font-size: clamp(11px, 3vw, 13px);
+    text-align: center;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .signal-waiting {
+    background: rgba(180, 180, 180, 0.1);
+    color: #aaa;
+    border: 1px solid rgba(150, 150, 150, 0.3);
+  }
+  .signal-trade {
+    background: rgba(50, 205, 50, 0.2);
+    color: #32cd32;
+    border: 1px solid rgba(50, 205, 50, 0.6);
+    box-shadow: 0 0 15px rgba(50, 205, 50, 0.4);
+    text-shadow: 0 0 8px rgba(50, 205, 50, 0.6);
+    animation: pulse-trade 2s infinite;
+  }
+  .signal-no-trade {
+    background: rgba(255, 0, 0, 0.15);
+    color: #f00;
+    border: 1px solid rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+  .signal-building {
+    background: rgba(255, 165, 0, 0.15);
+    color: #ffa500;
+    border: 1px solid rgba(255, 165, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
+    animation: pulse-building 1.5s infinite;
+  }
+  .signal-weak {
+    background: rgba(255, 255, 0, 0.15);
+    color: #ff0;
+    border: 1px solid rgba(255, 255, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+    animation: pulse-weak 2s infinite;
+  }
+  .signal-consolidation {
+    background: rgba(138, 43, 226, 0.15);
+    color: #9400d3;
+    border: 1px solid rgba(138, 43, 226, 0.5);
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+    text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+    animation: pulse-consolidation 2s infinite;
+  }
+  .signal-strong-trade {
+    background: rgba(0, 255, 0, 0.25);
+    color: #0f0;
+    border: 2px solid rgba(0, 255, 0, 0.8);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    animation: pulse-strong 0.5s infinite alternate;
+  }
+  @keyframes pulse-building {
+    0% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 165, 0, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.3); }
+  }
+  @keyframes pulse-weak {
+    0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.3); }
+  }
+  @keyframes pulse-consolidation {
+    0% { box-shadow: 0 0 5px rgba(138, 43, 226, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(138, 43, 226, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(138, 43, 226, 0.3); }
+  }
+  @keyframes pulse-trade {
+    0% { 
+      box-shadow: 0 0 8px rgba(50, 205, 50, 0.4);
+      transform: scale(1);
+    }
+    50% { 
+      box-shadow: 0 0 18px rgba(50, 205, 50, 0.6);
+      transform: scale(1.01);
+    }
+    100% { 
+      box-shadow: 0 0 8px rgba(50, 205, 50, 0.4);
+      transform: scale(1);
+    }
+  }
+  @keyframes pulse-strong {
+    0% { 
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+      transform: scale(1);
+    }
+    100% { 
+      box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
+      transform: scale(1.02);
+    }
+  }
+  .countdown {
+    font-size: clamp(10px, 2.5vw, 11px);
+    color: #00bbff;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .connection-status {
+    position: fixed;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    z-index: 10;
+  }
+  .connected { color: #0f0; }
+  .disconnected { color: #f00; }
+  .connecting { color: #ff0; }
+  .indicator-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .indicator-name {
+    color: #7db8ff;
+    font-size: 10px;
+  }
+  .indicator-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 2px;
+    width: 100%;
+  }
+  .positive-bar {
+    background: linear-gradient(90deg, rgba(0,255,0,0.3), rgba(0,255,0,0.8));
+  }
+  .negative-bar {
+    background: linear-gradient(90deg, rgba(255,0,0,0.3), rgba(255,0,0,0.8));
+  }
+  .neutral-bar {
+    background: rgba(150,150,150,0.3);
+  }
+  .indicator-strength {
+    font-size: 9px;
+    color: #aaa;
+    text-align: right;
+  }
+  .signal-explanation {
+    font-size: 9px;
+    color: #ccc;
+    margin-top: 4px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .trade-advice {
+    font-size: 10px;
+    color: #7db8ff;
+    margin-top: 4px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .advanced-indicators {
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 87, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 87, 255, 0.2);
+  }
+  .advanced-indicator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    font-size: 9px;
+  }
+  .confidence-meter {
+    margin-top: 4px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ffaa00, #44ff44);
+    transition: width 0.5s ease;
+  }
+  .signal-quality {
+    font-size: 8px;
+    text-align: center;
+    margin-top: 2px;
+    color: #7db8ff;
+  }
+  @media (max-width: 600px) {
+    .main-content {
+      grid-template-columns: 1fr 1fr;
+    }
+    .vol-card {
+      padding: 8px;
+    }
+  }
+  @media (max-width: 400px) {
+    .main-content {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>ACCUMULATOR OPTIONS TRADING SIGNAL ANALYZER</header>
+    <div class="main-content" id="cards-container"></div>
+    <div id="connection-status" class="connection-status disconnected">Disconnected</div>
+  </div>
+<script>
+(() => {
+  // Define volatility indices with their specific ranges
+  const volatilities = [
+    { 
+      symbol: '1HZ10V', 
+      name: 'Volatility 10 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.409, 
+        2: 0.383, 
+        3: 0.359, 
+        4: 0.342, 
+        5: 0.325 
+      }
+    },
+    { 
+      symbol: '1HZ15V', 
+      name: 'Volatility 15 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.8684, 
+        2: 0.8118, 
+        3: 0.7613, 
+        4: 0.7244, 
+        5: 0.6894
+      }
+    },
+    { 
+      symbol: '1HZ25V', 
+      name: 'Volatility 25 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 75.918, 
+        2: 70.962, 
+        3: 66.548, 
+        4: 63.322, 
+        5: 60.250
+      }
+    },
+    { 
+      symbol: '1HZ30V', 
+      name: 'Volatility 30 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.8225, 
+        2: 0.7689, 
+        3: 0.7210, 
+        4: 0.6861, 
+        5: 0.6531
+      }
+    },
+    { 
+      symbol: '1HZ50V', 
+      name: 'Volatility 50 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 37.933, 
+        2: 35.446, 
+        3: 33.244, 
+        4: 31.630, 
+        5: 30.112
+      }
+    },
+    { 
+      symbol: '1HZ75V', 
+      name: 'Volatility 75 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 1.342, 
+        2: 1.256, 
+        3: 1.179, 
+        4: 1.123, 
+        5: 1.069
+      }
+    },
+    { 
+      symbol: '1HZ90V', 
+      name: 'Volatility 90 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 7.9277, 
+        2: 7.3972, 
+        3: 6.9230, 
+        4: 6.570, 
+        5: 6.2771 
+      }
+    },
+    { 
+      symbol: '1HZ100V', 
+      name: 'Volatility 100 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.346, 
+        2: 0.324, 
+        3: 0.304, 
+        4: 0.289, 
+        5: 0.275
+      }
+    },
+    { 
+      symbol: 'R_10', 
+      name: 'Volatility 10 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.3518, 
+        2: 0.3289, 
+        3: 0.3084, 
+        4: 0.2934, 
+        5: 0.2793 
+      }
+    },
+    { 
+      symbol: 'R_25', 
+      name: 'Volatility 25 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.3810, 
+        2: 0.3562, 
+        3: 0.3342, 
+        4: 0.3178, 
+        5: 0.3096
+      }
+    },
+    { 
+      symbol: 'R_50', 
+      name: 'Volatility 50 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.04089, 
+        2: 0.03823, 
+        3: 0.03588, 
+        4: 0.03415, 
+        5: 0.03251 
+      }
+    },
+    { 
+      symbol: 'R_75', 
+      name: 'Volatility 75 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 27.48408, 
+        2: 25.68320, 
+        3: 24.10445, 
+        4: 22.93000, 
+        5: 21.81101
+      }
+    },
+    { 
+      symbol: 'R_100', 
+      name: 'Volatility 100 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.558, 
+        2: 0.522, 
+        3: 0.489, 
+        4: 0.466, 
+        5: 0.444
+      }
+    }
+  ];
+  
+  // Global accumulator parameters
+  const ACCUMULATOR_PARAMS = {
+    maxTicks: 230,
+    maxPayout: 10000,
+    growthRates: [1, 2, 3, 4, 5]
+  };
+  
+  const dataStore = {};
+  let ws = null;
+  let reconnectTimeout = null;
+  const MIN_DATA_POINTS = 50;
+  const STRONG_CONFIRMATION_PERIOD = 5;
+  const REGULAR_CONFIRMATION_PERIOD = 4;
+  const STRONG_THRESHOLD = 0.88;
+  const REGULAR_THRESHOLD = 0.78;
+  const WEAK_THRESHOLD = 0.5;
+
+  // ADDED: Signal persistence timing
+  const SIGNAL_PERSISTENCE_TIME = 4000; // 4 seconds
+
+  // SIMULATED DATA FOR TESTING
+  let simulatedDataCount = 0;
+  const simulatedBasePrices = {};
+  
+  // Initialize base prices for all symbols
+  volatilities.forEach(v => {
+    if (v.symbol.includes('10')) {
+      simulatedBasePrices[v.symbol] = 15.234;
+    } else if (v.symbol.includes('15')) {
+      simulatedBasePrices[v.symbol] = 18.567;
+    } else if (v.symbol.includes('25')) {
+      simulatedBasePrices[v.symbol] = 22.891;
+    } else if (v.symbol.includes('30')) {
+      simulatedBasePrices[v.symbol] = 25.432;
+    } else if (v.symbol.includes('50')) {
+      simulatedBasePrices[v.symbol] = 35.678;
+    } else if (v.symbol.includes('75')) {
+      simulatedBasePrices[v.symbol] = 45.123;
+    } else if (v.symbol.includes('90')) {
+      simulatedBasePrices[v.symbol] = 55.789;
+    } else if (v.symbol.includes('100')) {
+      simulatedBasePrices[v.symbol] = 65.432;
+    } else {
+      simulatedBasePrices[v.symbol] = 30.125;
+    }
+  });
+  
+  function generateSimulatedTick(symbol) {
+    const basePrice = simulatedBasePrices[symbol];
+    let volatilityNum = 25;
+    const match = symbol.match(/(\d+)/);
+    if (match) {
+      volatilityNum = parseInt(match[1]);
+    }
+    
+    const volatility = volatilityNum / 1000;
+    const change = (Math.random() - 0.5) * volatility * basePrice;
+    const newPrice = basePrice + change;
+    
+    simulatedBasePrices[symbol] = newPrice;
+    
+    return {
+      symbol: symbol,
+      quote: newPrice.toFixed(6),
+      id: `sim_${symbol}_${Date.now()}`,
+      pip_size: 0.001
+    };
+  }
+  
+  function startSimulatedData() {
+    setInterval(() => {
+      volatilities.forEach(v => {
+        const tick = generateSimulatedTick(v.symbol);
+        handleTick(tick);
+      });
+    }, 1000);
+  }
+  
+  // Enhanced EMA class
+  class EMA {
+    constructor(period) {
+      this.period = period;
+      this.multiplier = 2 / (period + 1);
+      this.ema = null;
+      this.prices = [];
+    }
+    update(price) {
+      this.prices.push(price);
+      if (this.prices.length > this.period * 2) {
+        this.prices.shift();
+      }
+      this.ema = this.ema === null ? price : (price - this.ema) * this.multiplier + this.ema;
+      return this.ema;
+    }
+    getCurrent() {
+      return this.ema;
+    }
+    getSlope() {
+      if (this.prices.length < 2) return 0;
+      return this.ema - (this.prices[this.prices.length - 2] || this.ema);
+    }
+  }
+  
+  // Choppiness Index Calculator
+  class ChoppinessIndex {
+    constructor(period = 14) {
+      this.period = period;
+      this.highs = [];
+      this.lows = [];
+      this.closes = [];
+    }
+    
+    update(high, low, close) {
+      this.highs.push(high);
+      this.lows.push(low);
+      this.closes.push(close);
+      
+      if (this.highs.length > this.period) {
+        this.highs.shift();
+        this.lows.shift();
+        this.closes.shift();
+      }
+      
+      if (this.highs.length < this.period) {
+        return null;
+      }
+      
+      let sumTrueRange = 0;
+      let highestHigh = Math.max(...this.highs);
+      let lowestLow = Math.min(...this.lows);
+      
+      for (let i = 1; i < this.period; i++) {
+        const trueRange = Math.max(
+          this.highs[i] - this.lows[i],
+          Math.abs(this.highs[i] - this.closes[i-1]),
+          Math.abs(this.lows[i] - this.closes[i-1])
+        );
+        sumTrueRange += trueRange;
+      }
+      
+      const atr = sumTrueRange / (this.period - 1);
+      const ci = 100 * Math.log10(atr / (highestHigh - lowestLow)) / Math.log10(this.period);
+      
+      return Math.min(Math.max(ci, 0), 100);
+    }
+  }
+  
+  // Williams %R
+  class WilliamsR {
+    constructor(period = 14) {
+      this.period = period;
+      this.highs = [];
+      this.lows = [];
+    }
+    
+    update(high, low, close) {
+      this.highs.push(high);
+      this.lows.push(low);
+      
+      if (this.highs.length > this.period) {
+        this.highs.shift();
+        this.lows.shift();
+      }
+      
+      if (this.highs.length < this.period) {
+        return null;
+      }
+      
+      const highestHigh = Math.max(...this.highs);
+      const lowestLow = Math.min(...this.lows);
+      
+      if (highestHigh === lowestLow) {
+        return -50;
+      }
+      
+      return ((highestHigh - close) / (highestHigh - lowestLow)) * -100;
+    }
+  }
+  
+  // Price Action Analyzer
+  class PriceActionAnalyzer {
+    constructor() {
+      this.prices = [];
+      this.maxHistory = 20;
+    }
+    
+    update(price) {
+      this.prices.push(price);
+      if (this.prices.length > this.maxHistory) {
+        this.prices.shift();
+      }
+      
+      if (this.prices.length < 5) {
+        return null;
+      }
+      
+      const recentPrices = this.prices.slice(-5);
+      const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
+      const priceVariance = recentPrices.reduce((a, b) => a + Math.pow(b - avgPrice, 2), 0) / recentPrices.length;
+      const priceStdDev = Math.sqrt(priceVariance);
+      
+      const trend = this.prices[this.prices.length - 1] > this.prices[this.prices.length - 5] ? 'up' : 'down';
+      const momentum = (this.prices[this.prices.length - 1] - this.prices[this.prices.length - 5]) / this.prices[this.prices.length - 5] * 100;
+      
+      return {
+        trend,
+        momentum,
+        volatility: priceStdDev / avgPrice * 100,
+        isConsolidating: priceStdDev / avgPrice < 0.01
+      };
+    }
+  }
+  
+  // Enhanced MACD Calculator
+  class MACDCalculator {
+    constructor() {
+      this.fastEMA = new EMA(12);
+      this.slowEMA = new EMA(26);
+      this.signalEMA = new EMA(9);
+      this.history = [];
+      this.maxHistory = 20;
+    }
+    
+    update(price) {
+      const fast = this.fastEMA.update(price);
+      const slow = this.slowEMA.update(price);
+      
+      if (fast === null || slow === null) {
+        return null;
+      }
+      
+      const macdLine = fast - slow;
+      const signalLine = this.signalEMA.update(macdLine);
+      const histogram = macdLine - signalLine;
+      
+      this.history.push({
+        macdLine,
+        signalLine,
+        histogram,
+        direction: macdLine > signalLine ? 'up' : 'down',
+        timestamp: Date.now()
+      });
+      
+      if (this.history.length > this.maxHistory) {
+        this.history.shift();
+      }
+      
+      const momentum = this.history.length >= 2 ? macdLine - this.history[this.history.length - 2].macdLine : 0;
+      const acceleration = this.history.length >= 3 ? 
+        (macdLine - this.history[this.history.length - 2].macdLine) - 
+        (this.history[this.history.length - 2].macdLine - this.history[this.history.length - 3].macdLine) : 0;
+      
+      return {
+        macdLine,
+        signalLine,
+        histogram,
+        direction: this.getDirection(),
+        strength: this.calculateStrength(macdLine, signalLine),
+        momentum,
+        acceleration,
+        isBullish: macdLine > signalLine && histogram > 0,
+        isBearish: macdLine < signalLine && histogram < 0
+      };
+    }
+    
+    getDirection() {
+      if (this.history.length < 2) return 'neutral';
+      const current = this.history[this.history.length - 1].direction;
+      const prev = this.history[this.history.length - 2].direction;
+      return current === prev ? current : 'neutral';
+    }
+    
+    calculateStrength(macdLine, signalLine) {
+      const diff = Math.abs(macdLine - signalLine);
+      const maxDiff = Math.max(0.01, Math.abs(macdLine) * 2);
+      return Math.min(diff / maxDiff, 1);
+    }
+  }
+  
+  // Enhanced RSI Calculator
+  class RSICalculator {
+    constructor(period = 14) {
+      this.period = period;
+      this.gains = [];
+      this.losses = [];
+      this.prevPrice = null;
+      this.rsi = null;
+      this.history = [];
+    }
+    
+    update(price) {
+      if (this.prevPrice === null) {
+        this.prevPrice = price;
+        return null;
+      }
+      
+      const change = price - this.prevPrice;
+      this.prevPrice = price;
+      
+      const gain = change > 0 ? change : 0;
+      const loss = change < 0 ? -change : 0;
+      
+      this.gains.push(gain);
+      this.losses.push(loss);
+      
+      if (this.gains.length > this.period) {
+        this.gains.shift();
+        this.losses.shift();
+      }
+      
+      if (this.gains.length < this.period) {
+        return null;
+      }
+      
+      const avgGain = this.gains.reduce((sum, val) => sum + val, 0) / this.period;
+      const avgLoss = this.losses.reduce((sum, val) => sum + val, 0) / this.period;
+      
+      if (avgLoss === 0) {
+        this.rsi = 100;
+      } else {
+        const rs = avgGain / avgLoss;
+        this.rsi = 100 - (100 / (1 + rs));
+      }
+      
+      this.history.push(this.rsi);
+      if (this.history.length > 10) {
+        this.history.shift();
+      }
+      
+      return this.rsi;
+    }
+    
+    getMomentum() {
+      if (this.history.length < 2) return 0;
+      return this.history[this.history.length - 1] - this.history[this.history.length - 2];
+    }
+    
+    getCurrent() {
+      return this.rsi;
+    }
+  }
+  
+  // Enhanced Stochastic Oscillator
+  class StochasticOscillator {
+    constructor(period = 14, smoothing = 3) {
+      this.period = period;
+      this.smoothing = smoothing;
+      this.highs = [];
+      this.lows = [];
+      this.closes = [];
+      this.kValues = [];
+      this.dValues = [];
+    }
+    
+    update(price, high, low) {
+      this.closes.push(price);
+      this.highs.push(high);
+      this.lows.push(low);
+      
+      if (this.closes.length > this.period) {
+        this.closes.shift();
+        this.highs.shift();
+        this.lows.shift();
+      }
+      
+      if (this.closes.length < this.period) {
+        return { k: null, d: null };
+      }
+      
+      const highestHigh = Math.max(...this.highs);
+      const lowestLow = Math.min(...this.lows);
+      
+      if (highestHigh === lowestLow) {
+        return { k: 50, d: 50 };
+      }
+      
+      const currentClose = this.closes[this.closes.length - 1];
+      const k = ((currentClose - lowestLow) / (highestHigh - lowestLow)) * 100;
+      this.kValues.push(k);
+      
+      if (this.kValues.length > this.smoothing) {
+        this.kValues.shift();
+      }
+      
+      let d = null;
+      if (this.kValues.length >= this.smoothing) {
+        d = this.kValues.reduce((sum, val) => sum + val, 0) / this.smoothing;
+        this.dValues.push(d);
+        
+        if (this.dValues.length > 2) {
+          this.dValues.shift();
+        }
+      }
+      
+      return { 
+        k, 
+        d,
+        isOverbought: k > 80,
+        isOversold: k < 20,
+        crossover: this.kValues.length >= 2 && 
+                  ((this.kValues[this.kValues.length - 2] < this.dValues[this.dValues.length - 2] && k > d) ||
+                   (this.kValues[this.kValues.length - 2] > this.dValues[this.dValues.length - 2] && k < d))
+      };
+    }
+  }
+  
+  // Enhanced ADX Calculator
+  class ADXCalculator {
+    constructor(period = 14) {
+      this.period = period;
+      this.prevHigh = null;
+      this.prevLow = null;
+      this.prevClose = null;
+      this.trValues = [];
+      this.plusDMValues = [];
+      this.minusDMValues = [];
+      this.smoothedTR = 0;
+      this.smoothedPlusDM = 0;
+      this.smoothedMinusDM = 0;
+      this.adx = null;
+      this.adxHistory = [];
+    }
+    
+    update(high, low, close) {
+      if (this.prevHigh === null) {
+        this.prevHigh = high;
+        this.prevLow = low;
+        this.prevClose = close;
+        return null;
+      }
+      
+      const tr = Math.max(
+        high - low,
+        Math.abs(high - this.prevClose),
+        Math.abs(low - this.prevClose)
+      );
+      
+      const upMove = high - this.prevHigh;
+      const downMove = this.prevLow - low;
+      
+      let plusDM = 0;
+      let minusDM = 0;
+      
+      if (upMove > downMove && upMove > 0) {
+        plusDM = upMove;
+      }
+      
+      if (downMove > upMove && downMove > 0) {
+        minusDM = downMove;
+      }
+      
+      if (this.trValues.length < this.period) {
+        this.trValues.push(tr);
+        this.plusDMValues.push(plusDM);
+        this.minusDMValues.push(minusDM);
+        
+        if (this.trValues.length === this.period) {
+          this.smoothedTR = this.trValues.reduce((sum, val) => sum + val, 0);
+          this.smoothedPlusDM = this.plusDMValues.reduce((sum, val) => sum + val, 0);
+          this.smoothedMinusDM = this.minusDMValues.reduce((sum, val) => sum + val, 0);
+        }
+      } else {
+        this.smoothedTR = this.smoothedTR - (this.smoothedTR / this.period) + tr;
+        this.smoothedPlusDM = this.smoothedPlusDM - (this.smoothedPlusDM / this.period) + plusDM;
+        this.smoothedMinusDM = this.smoothedMinusDM - (this.smoothedMinusDM / this.period) + minusDM;
+      }
+      
+      this.prevHigh = high;
+      this.prevLow = low;
+      this.prevClose = close;
+      
+      if (this.trValues.length < this.period) {
+        return null;
+      }
+      
+      const plusDI = (this.smoothedPlusDM / this.smoothedTR) * 100;
+      const minusDI = (this.smoothedMinusDM / this.smoothedTR) * 100;
+      
+      const dx = (Math.abs(plusDI - minusDI) / (plusDI + minusDI)) * 100;
+      
+      if (this.adx === null) {
+        this.adx = dx;
+      } else {
+        this.adx = ((this.adx * (this.period - 1)) + dx) / this.period;
+      }
+      
+      this.adxHistory.push(this.adx);
+      if (this.adxHistory.length > 10) {
+        this.adxHistory.shift();
+      }
+      
+      const trendMomentum = this.adxHistory.length >= 2 ? this.adx - this.adxHistory[this.adxHistory.length - 2] : 0;
+      
+      return {
+        plusDI,
+        minusDI,
+        adx: this.adx,
+        trendStrength: this.adx > 25 ? (this.adx > 50 ? 'strong' : 'moderate') : 'weak',
+        trendDirection: plusDI > minusDI ? 'up' : 'down',
+        trendMomentum,
+        isTrending: this.adx > 20,
+        diCrossover: plusDI > minusDI && this.adx > 20
+      };
+    }
+  }
+  
+  // Enhanced Bollinger Bands
+  class BollingerBands {
+    constructor(period = 20, multiplier = 2) {
+      this.period = period;
+      this.multiplier = multiplier;
+      this.prices = [];
+    }
+    
+    update(price) {
+      this.prices.push(price);
+      
+      if (this.prices.length > this.period) {
+        this.prices.shift();
+      }
+      
+      if (this.prices.length < this.period) {
+        return null;
+      }
+      
+      const sum = this.prices.reduce((a, b) => a + b, 0);
+      const sma = sum / this.period;
+      const variance = this.prices.reduce((a, b) => a + Math.pow(b - sma, 2), 0) / this.period;
+      const stdDev = Math.sqrt(variance);
+      
+      const upper = sma + (this.multiplier * stdDev);
+      const lower = sma - (this.multiplier * stdDev);
+      const bandwidth = (this.multiplier * stdDev * 2) / sma * 100;
+      const percentB = (price - lower) / (upper - lower);
+      
+      return {
+        upper,
+        middle: sma,
+        lower,
+        bandwidth,
+        percentB,
+        isSqueeze: bandwidth < 10,
+        isExpanding: bandwidth > 15,
+        position: percentB < 0.2 ? 'lower' : percentB > 0.8 ? 'upper' : 'middle'
+      };
+    }
+  }
+  
+  // Enhanced Accumulator-specific analysis
+  class AccumulatorAnalyzer {
+    constructor() {
+      this.rangeAnalysis = [];
+      this.maxHistory = 50;
+      this.consolidationCount = 0;
+      this.stablePeriodCount = 0;
+    }
+    
+    update(price, growthRate, symbolRanges) {
+      const range = symbolRanges[growthRate] || symbolRanges[3];
+      const rangePercent = range;
+      
+      this.rangeAnalysis.push({
+        price,
+        upperBarrier: price * (1 + rangePercent/100),
+        lowerBarrier: price * (1 - rangePercent/100),
+        rangePercent,
+        timestamp: Date.now()
+      });
+      
+      if (this.rangeAnalysis.length > this.maxHistory) {
+        this.rangeAnalysis.shift();
+      }
+      
+      // Check for consolidation
+      if (this.rangeAnalysis.length >= 10) {
+        const recentPrices = this.rangeAnalysis.slice(-10).map(item => item.price);
+        const high = Math.max(...recentPrices);
+        const low = Math.min(...recentPrices);
+        const rangeSize = (high - low) / price * 100;
+        
+        if (rangeSize < rangePercent * 0.5) {
+          this.consolidationCount++;
+        } else {
+          this.consolidationCount = Math.max(0, this.consolidationCount - 1);
+        }
+      }
+      
+      return {
+        rangePercent,
+        upperBarrier: price * (1 + rangePercent/100),
+        lowerBarrier: price * (1 - rangePercent/100),
+        isConsolidating: this.consolidationCount >= 5
+      };
+    }
+    
+    analyzeRangeStability(priceHistory, currentPrice, growthRate, symbolRanges) {
+      if (priceHistory.length < 10) return { stable: false, confidence: 0, avgVolatility: 0 };
+      
+      const range = symbolRanges[growthRate] || symbolRanges[3];
+      const rangePercent = range;
+      
+      const volatilities = [];
+      for (let i = 1; i < priceHistory.length; i++) {
+        const change = Math.abs((priceHistory[i] - priceHistory[i-1]) / priceHistory[i-1] * 100);
+        volatilities.push(change);
+      }
+      
+      const avgVolatility = volatilities.reduce((sum, vol) => sum + vol, 0) / volatilities.length;
+      const maxVolatility = Math.max(...volatilities);
+      
+      const rangeStability = Math.max(0, 1 - (avgVolatility / rangePercent));
+      const maxVolatilityStability = Math.max(0, 1 - (maxVolatility / rangePercent));
+      
+      const recentPrices = priceHistory.slice(-10);
+      const recentHigh = Math.max(...recentPrices);
+      const recentLow = Math.min(...recentPrices);
+      const recentMid = (recentHigh + recentLow) / 2;
+      const distanceFromMid = Math.abs(currentPrice - recentMid) / (recentHigh - recentLow);
+      const midPositionStability = 1 - Math.min(distanceFromMid, 1);
+      
+      const overallStability = (rangeStability * 0.5 + maxVolatilityStability * 0.3 + midPositionStability * 0.2);
+      
+      // Track stable periods
+      if (overallStability > 0.7) {
+        this.stablePeriodCount++;
+      } else {
+        this.stablePeriodCount = Math.max(0, this.stablePeriodCount - 1);
+      }
+      
+      return {
+        stable: overallStability > 0.7,
+        confidence: overallStability,
+        avgVolatility,
+        maxVolatility,
+        rangePercent,
+        isLowVolatility: avgVolatility < rangePercent * 0.3,
+        stablePeriods: this.stablePeriodCount
+      };
+    }
+  }
+  
+  function buildCards() {
+    const container = document.getElementById('cards-container');
+    volatilities.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'vol-card';
+      card.innerHTML = `
+        <div class="vol-title">${v.name}</div>
+        <div class="data-grid">
+          <div class="data-item"><span class="data-label">Price:</span><span id="price-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">MACD:</span><span id="macd-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Signal:</span><span id="signal-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Hist:</span><span id="histogram-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">RSI14:</span><span id="rsi-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">ADX:</span><span id="adx-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">BB %B:</span><span id="bbPercent-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Stoch:</span><span id="stoch-${v.symbol}" class="indicator-value">-</span></div>
+        </div>
+        
+        <div class="advanced-indicators">
+          <div class="advanced-indicator-grid">
+            <div class="data-item"><span class="data-label">Choppiness:</span><span id="choppiness-${v.symbol}" class="indicator-value">-</span></div>
+            <div class="data-item"><span class="data-label">Williams %R:</span><span id="williams-${v.symbol}" class="indicator-value">-</span></div>
+            <div class="data-item"><span class="data-label">Trend:</span><span id="trend-${v.symbol}" class="indicator-value">-</span></div>
+            <div class="data-item"><span class="data-label">Confidence:</span><span id="confidence-${v.symbol}" class="indicator-value">-</span></div>
+          </div>
+          <div class="confidence-meter">
+            <div id="confidence-bar-${v.symbol}" class="confidence-fill" style="width: 0%"></div>
+          </div>
+          <div class="signal-quality" id="signal-quality-${v.symbol}">-</div>
+        </div>
+        
+        <div class="growth-rate-selector">
+          ${ACCUMULATOR_PARAMS.growthRates.map(rate => `
+            <button class="growth-rate-btn ${rate === v.growthRate ? 'active' : ''}" 
+                    data-symbol="${v.symbol}" data-rate="${rate}">${rate}%</button>
+          `).join('')}
+        </div>
+        
+        <div class="accumulator-info" id="accumulator-info-${v.symbol}">
+          Range: ±${v.ranges[v.growthRate]}% | Max Ticks: ${ACCUMULATOR_PARAMS.maxTicks}
+        </div>
+        
+        <div class="indicator-row">
+          <span class="indicator-name">MACD Strength</span>
+          <span class="indicator-strength" id="macd-strength-${v.symbol}">-</span>
+        </div>
+        <div id="macd-bar-${v.symbol}" class="indicator-bar neutral-bar"></div>
+        
+        <div class="indicator-row">
+          <span class="indicator-name">Trend Strength</span>
+          <span class="indicator-strength" id="trend-strength-${v.symbol}">-</span>
+        </div>
+        <div id="trend-bar-${v.symbol}" class="indicator-bar neutral-bar"></div>
+        
+        <div class="indicator-row">
+          <span class="indicator-name">Range Stability</span>
+          <span class="indicator-strength" id="range-strength-${v.symbol}">-</span>
+        </div>
+        <div id="range-bar-${v.symbol}" class="indicator-bar neutral-bar"></div>
+        
+        <div id="signal-text-${v.symbol}" class="signal-area signal-waiting">GATHERING DATA</div>
+        <div id="countdown-${v.symbol}" class="countdown">0/${MIN_DATA_POINTS} points</div>
+        <div id="signal-explanation-${v.symbol}" class="signal-explanation">Collecting market data...</div>
+        <div id="trade-advice-${v.symbol}" class="trade-advice">Waiting for sufficient data</div>
+      `;
+      container.appendChild(card);
+      
+      dataStore[v.symbol] = {
+        closes: [],
+        highs: [],
+        lows: [],
+        macdCalc: new MACDCalculator(),
+        rsiCalc: new RSICalculator(14),
+        stochCalc: new StochasticOscillator(14, 3),
+        adxCalc: new ADXCalculator(14),
+        bbCalc: new BollingerBands(20, 2),
+        choppinessCalc: new ChoppinessIndex(14),
+        williamsCalc: new WilliamsR(14),
+        priceActionCalc: new PriceActionAnalyzer(),
+        accumulatorAnalyzer: new AccumulatorAnalyzer(),
+        confirmationCount: 0,
+        strongConfirmationCount: 0,
+        lastSignal: null,
+        lastStrongSignalTime: 0,
+        lastTradeSignalTime: 0, // ADDED: Track regular trade signal time
+        consolidationCount: 0,
+        growthRate: v.growthRate,
+        symbolRanges: v.ranges,
+        ui: {
+          price: card.querySelector(`#price-${v.symbol}`),
+          macdLine: card.querySelector(`#macd-${v.symbol}`),
+          signalLine: card.querySelector(`#signal-${v.symbol}`),
+          histogram: card.querySelector(`#histogram-${v.symbol}`),
+          rsi: card.querySelector(`#rsi-${v.symbol}`),
+          adx: card.querySelector(`#adx-${v.symbol}`),
+          bbPercent: card.querySelector(`#bbPercent-${v.symbol}`),
+          stoch: card.querySelector(`#stoch-${v.symbol}`),
+          choppiness: card.querySelector(`#choppiness-${v.symbol}`),
+          williams: card.querySelector(`#williams-${v.symbol}`),
+          trend: card.querySelector(`#trend-${v.symbol}`),
+          confidence: card.querySelector(`#confidence-${v.symbol}`),
+          confidenceBar: card.querySelector(`#confidence-bar-${v.symbol}`),
+          signalQuality: card.querySelector(`#signal-quality-${v.symbol}`),
+          signalText: card.querySelector(`#signal-text-${v.symbol}`),
+          countdown: card.querySelector(`#countdown-${v.symbol}`),
+          macdStrength: card.querySelector(`#macd-strength-${v.symbol}`),
+          macdBar: card.querySelector(`#macd-bar-${v.symbol}`),
+          trendStrength: card.querySelector(`#trend-strength-${v.symbol}`),
+          trendBar: card.querySelector(`#trend-bar-${v.symbol}`),
+          rangeStrength: card.querySelector(`#range-strength-${v.symbol}`),
+          rangeBar: card.querySelector(`#range-bar-${v.symbol}`),
+          explanation: card.querySelector(`#signal-explanation-${v.symbol}`),
+          tradeAdvice: card.querySelector(`#trade-advice-${v.symbol}`),
+          accumulatorInfo: card.querySelector(`#accumulator-info-${v.symbol}`)
+        }
+      };
+    });
+  }
+  
+  function connectWebSocket() {
+    updateStatus('connecting', 'Connecting...');
+    
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    
+    if (ws) {
+      ws.onclose = null;
+      ws.close();
+    }
+    
+    try {
+      ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1');
+      
+      ws.onopen = () => {
+        updateStatus('connected', 'Connected - Receiving Data');
+        console.log('WebSocket connected successfully');
+        
+        volatilities.forEach(v => {
+          ws.send(JSON.stringify({ 
+            ticks: v.symbol, 
+            subscribe: 1 
+          }));
+        });
+      };
+      
+      ws.onmessage = e => {
+        try {
+          const data = JSON.parse(e.data);
+          if(data.msg_type === 'tick') {
+            handleTick(data.tick);
+          }
+        } catch(e) {
+          console.error('Error parsing message:', e);
+        }
+      };
+      
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+        updateStatus('disconnected', 'Disconnected - Using Simulated Data');
+        
+        if (!window.simulatedDataStarted) {
+          window.simulatedDataStarted = true;
+          startSimulatedData();
+        }
+        
+        if (event.code !== 1000) {
+          reconnectTimeout = setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            connectWebSocket();
+          }, 5000);
+        }
+      };
+      
+      ws.onerror = (e) => {
+        console.error('WebSocket error:', e);
+        updateStatus('disconnected', 'Connection Error - Using Simulated Data');
+        
+        if (!window.simulatedDataStarted) {
+          window.simulatedDataStarted = true;
+          startSimulatedData();
+        }
+      };
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      updateStatus('disconnected', 'Connection Failed - Using Simulated Data');
+      
+      if (!window.simulatedDataStarted) {
+        window.simulatedDataStarted = true;
+        startSimulatedData();
+      }
+    }
+  }
+  
+  function updateStatus(status, text) {
+    const el = document.getElementById('connection-status');
+    el.className = `connection-status ${status}`;
+    el.textContent = text;
+  }
+  
+  function handleTick(tick) {
+    const { symbol, quote } = tick;
+    const d = dataStore[symbol];
+    if(!d) return;
+    
+    const price = parseFloat(quote);
+    const high = price;
+    const low = price;
+    
+    d.closes.push(price);
+    d.highs.push(high);
+    d.lows.push(low);
+    
+    if(d.closes.length > 100) {
+      d.closes.shift();
+      d.highs.shift();
+      d.lows.shift();
+    }
+    
+    d.ui.price.textContent = price.toFixed(4);
+    
+    // Update all indicators
+    const macd = d.macdCalc.update(price);
+    const rsi = d.rsiCalc.update(price);
+    const stoch = d.stochCalc.update(price, high, low);
+    const adx = d.adxCalc.update(high, low, price);
+    const bb = d.bbCalc.update(price);
+    const choppiness = d.choppinessCalc.update(high, low, price);
+    const williams = d.williamsCalc.update(high, low, price);
+    const priceAction = d.priceActionCalc.update(price);
+    const accumulatorAnalysis = d.accumulatorAnalyzer.update(price, d.growthRate, d.symbolRanges);
+    const rangeStability = d.accumulatorAnalyzer.analyzeRangeStability(d.closes, price, d.growthRate, d.symbolRanges);
+    
+    // Update indicator displays
+    if (macd) {
+      d.ui.macdLine.textContent = macd.macdLine.toFixed(4);
+      d.ui.signalLine.textContent = macd.signalLine.toFixed(4);
+      d.ui.histogram.textContent = macd.histogram.toFixed(4);
+      d.ui.macdStrength.textContent = `${Math.round(macd.strength * 100)}%`;
+      d.ui.macdBar.className = `indicator-bar ${macd.direction === 'up' ? 'positive-bar' : 'negative-bar'}`;
+      d.ui.macdBar.style.width = `${macd.strength * 100}%`;
+    }
+    
+    if (rsi !== null) {
+      d.ui.rsi.textContent = rsi.toFixed(1);
+    }
+    
+    if (stoch.k !== null && stoch.d !== null) {
+      d.ui.stoch.textContent = `${stoch.k.toFixed(1)}/${stoch.d.toFixed(1)}`;
+    }
+    
+    if (adx !== null) {
+      d.ui.adx.textContent = `${adx.adx.toFixed(1)} (${adx.trendDirection})`;
+      const trendStrengthValue = Math.min(adx.adx / 50, 1);
+      d.ui.trendStrength.textContent = `${adx.trendStrength}`;
+      d.ui.trendBar.className = `indicator-bar ${adx.trendDirection === 'up' ? 'positive-bar' : 'negative-bar'}`;
+      d.ui.trendBar.style.width = `${trendStrengthValue * 100}%`;
+    }
+    
+    if (bb !== null) {
+      d.ui.bbPercent.textContent = bb.percentB.toFixed(2);
+    }
+    
+    // Update advanced indicators
+    if (choppiness !== null) {
+      d.ui.choppiness.textContent = choppiness.toFixed(1);
+      d.ui.choppiness.style.color = choppiness > 61.8 ? '#ff4444' : choppiness < 38.2 ? '#44ff44' : '#ffaa00';
+    }
+    
+    if (williams !== null) {
+      d.ui.williams.textContent = williams.toFixed(1);
+      d.ui.williams.style.color = williams > -20 ? '#ff4444' : williams < -80 ? '#44ff44' : '#ffaa00';
+    }
+    
+    if (priceAction !== null) {
+      d.ui.trend.textContent = priceAction.trend;
+      d.ui.trend.style.color = priceAction.trend === 'up' ? '#44ff44' : '#ff4444';
+    }
+    
+    // Update range stability
+    d.ui.rangeStrength.textContent = `${Math.round(rangeStability.confidence * 100)}%`;
+    d.ui.rangeBar.className = `indicator-bar ${rangeStability.stable ? 'positive-bar' : 'negative-bar'}`;
+    d.ui.rangeBar.style.width = `${rangeStability.confidence * 100}%`;
+    
+    d.ui.accumulatorInfo.textContent = 
+      `Range: ±${d.symbolRanges[d.growthRate]}% | Volatility: ${rangeStability.avgVolatility ? rangeStability.avgVolatility.toFixed(4) : '0.0000'}%`;
+    
+    d.ui.countdown.textContent = `${d.closes.length}/${MIN_DATA_POINTS} points`;
+    
+    if (d.closes.length >= MIN_DATA_POINTS) {
+      generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis);
+    } else {
+      const progress = Math.min(d.closes.length / MIN_DATA_POINTS, 1);
+      d.ui.signalText.textContent = `GATHERING DATA ${Math.round(progress * 100)}%`;
+      d.ui.signalText.className = 'signal-area signal-waiting';
+      d.ui.explanation.textContent = `Collecting data: ${d.closes.length}/${MIN_DATA_POINTS} points`;
+      d.ui.tradeAdvice.textContent = 'Need more market data for analysis';
+    }
+  }
+  
+  function generateEnhancedSignals(d, macd, rsi, adx, bb, stoch, rangeStability, choppiness, williams, priceAction, accumulatorAnalysis) {
+    let signalStrength = 0;
+    let signalDirection = null;
+    let confirmationReasons = [];
+    let warningReasons = [];
+    
+    const currentTime = Date.now();
+    
+    // MODIFIED: Check if we should maintain ANY trade signal for 4 seconds
+    if ((d.lastStrongSignalTime > 0 && (currentTime - d.lastStrongSignalTime) < SIGNAL_PERSISTENCE_TIME) ||
+        (d.lastTradeSignalTime > 0 && (currentTime - d.lastTradeSignalTime) < SIGNAL_PERSISTENCE_TIME)) {
+      // Maintain the current signal for 4 seconds
+      return; // Don't process any further analysis during persistence period
+    }
+    
+    // Reset signal timers if persistence period is over
+    if (d.lastStrongSignalTime > 0 && (currentTime - d.lastStrongSignalTime) >= SIGNAL_PERSISTENCE_TIME) {
+      d.lastStrongSignalTime = 0;
+    }
+    if (d.lastTradeSignalTime > 0 && (currentTime - d.lastTradeSignalTime) >= SIGNAL_PERSISTENCE_TIME) {
+      d.lastTradeSignalTime = 0;
+    }
+    
+    // 1. Range stability (most important for accumulators) - 25% weight
+    if (rangeStability.stable && rangeStability.isLowVolatility && rangeStability.stablePeriods >= 3) {
+      signalStrength += 0.25 * rangeStability.confidence;
+      signalDirection = 'trade';
+      confirmationReasons.push(`Range stable (${Math.round(rangeStability.confidence * 100)}%)`);
+    } else if (!rangeStability.stable) {
+      warningReasons.push(`Unstable range`);
+    }
+    
+    // 2. Choppiness Index - 15% weight (low choppiness is good for range-bound)
+    if (choppiness !== null && choppiness < 38) {
+      signalStrength += 0.15;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Low choppiness (${choppiness.toFixed(1)})`);
+    } else if (choppiness !== null && choppiness > 62) {
+      signalStrength -= 0.1;
+      warningReasons.push(`High choppiness`);
+    }
+    
+    // 3. MACD - 15% weight (neutral/weak signals preferred)
+    if (macd && macd.direction === 'neutral' && Math.abs(macd.histogram) < 0.04) {
+      signalStrength += 0.15;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`MACD neutral`);
+    } else if (macd && macd.strength < 0.2) {
+      signalStrength += 0.1;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`MACD weak trend`);
+    } else if (macd && macd.strength > 0.5) {
+      signalStrength -= 0.1;
+      warningReasons.push(`Strong MACD trend`);
+    }
+    
+    // 4. RSI - 10% weight (neutral levels preferred)
+    if (rsi !== null && rsi > 46 && rsi < 54) {
+      signalStrength += 0.1;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`RSI neutral (${rsi.toFixed(1)})`);
+    } else if (rsi !== null && (rsi < 38 || rsi > 62)) {
+      signalStrength -= 0.05;
+      warningReasons.push(`Extreme RSI`);
+    }
+    
+    // 5. ADX - 10% weight (weak trends preferred)
+    if (adx && adx.trendStrength === 'weak' && !adx.isTrending && adx.adx < 18) {
+      signalStrength += 0.1;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Weak trend`);
+    } else if (adx && adx.trendStrength === 'strong') {
+      signalStrength -= 0.1;
+      warningReasons.push(`Strong trend`);
+    }
+    
+    // 6. Bollinger Bands - 10% weight (middle position preferred)
+    if (bb && bb.percentB > 0.42 && bb.percentB < 0.58 && bb.isSqueeze) {
+      signalStrength += 0.1;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`BB squeeze middle`);
+    } else if (bb && bb.percentB > 0.38 && bb.percentB < 0.62) {
+      signalStrength += 0.05;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`BB middle`);
+    }
+    
+    // 7. Williams %R - 5% weight (neutral preferred)
+    if (williams !== null && williams > -58 && williams < -42) {
+      signalStrength += 0.05;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Williams neutral`);
+    }
+    
+    // 8. Price Action - 5% weight (consolidation preferred)
+    if (priceAction && priceAction.isConsolidating && Math.abs(priceAction.momentum) < 0.8) {
+      signalStrength += 0.05;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Price consolidating`);
+    }
+    
+    // 9. Accumulator-specific consolidation
+    if (accumulatorAnalysis.isConsolidating) {
+      signalStrength += 0.05;
+      signalDirection = signalDirection || 'trade';
+      confirmationReasons.push(`Accumulator consolidation`);
+    }
+    
+    // Apply warnings
+    signalStrength = Math.max(0, signalStrength - (warningReasons.length * 0.05));
+    
+    signalStrength = Math.min(signalStrength, 1);
+    
+    // Update confidence display
+    const confidencePercentage = Math.round(signalStrength * 100);
+    d.ui.confidence.textContent = `${confidencePercentage}%`;
+    d.ui.confidenceBar.style.width = `${confidencePercentage}%`;
+    
+    // Signal confirmation logic
+    if (signalDirection === 'trade') {
+      if (d.lastSignal === 'TRADE') {
+        d.confirmationCount++;
+        if (signalStrength >= STRONG_THRESHOLD) {
+          d.strongConfirmationCount++;
+        } else {
+          d.strongConfirmationCount = Math.max(0, d.strongConfirmationCount - 1);
+        }
+      } else {
+        d.lastSignal = 'TRADE';
+        d.confirmationCount = 1;
+        d.strongConfirmationCount = signalStrength >= STRONG_THRESHOLD ? 1 : 0;
+      }
+    } else {
+      d.lastSignal = null;
+      d.confirmationCount = 0;
+      d.strongConfirmationCount = 0;
+    }
+    
+    // Update signal explanation
+    let explanation = '';
+    if (confirmationReasons.length > 0) {
+      explanation = `Positive: ${confirmationReasons.join(', ')}`;
+    }
+    if (warningReasons.length > 0) {
+      explanation += (explanation ? ' | ' : '') + `Warnings: ${warningReasons.join(', ')}`;
+    }
+    d.ui.explanation.textContent = explanation || 'Market conditions not optimal';
+    
+    // STRONG TRADE ACCUMULATOR conditions (very strict)
+    const hasVeryStrongConfirmations = confirmationReasons.length >= 6;
+    const hasNoCriticalWarnings = warningReasons.length === 0;
+    const isHighlyStable = rangeStability.confidence > 0.85 && rangeStability.stablePeriods >= 5;
+    const hasPerfectIndicators = choppiness !== null && choppiness < 32 && 
+                                rsi !== null && rsi > 48 && rsi < 52 &&
+                                bb && bb.percentB > 0.45 && bb.percentB < 0.55;
+    
+    // REGULAR TRADE ACCUMULATOR conditions (much stricter now)
+    const hasStrongConfirmations = confirmationReasons.length >= 5;
+    const hasMinimalWarnings = warningReasons.length <= 1;
+    const isVeryStable = rangeStability.confidence > 0.78 && rangeStability.stablePeriods >= 3;
+    const hasGoodIndicators = choppiness !== null && choppiness < 42 && 
+                             rsi !== null && rsi > 44 && rsi < 56 &&
+                             bb && bb.percentB > 0.4 && bb.percentB < 0.6;
+    
+    if (d.strongConfirmationCount >= STRONG_CONFIRMATION_PERIOD && 
+        signalStrength >= STRONG_THRESHOLD && 
+        hasVeryStrongConfirmations &&
+        hasNoCriticalWarnings &&
+        isHighlyStable &&
+        hasPerfectIndicators) {
+      
+      d.ui.signalText.textContent = 'STRONG TRADE ACCUMULATOR';
+      d.ui.signalText.className = 'signal-area signal-strong-trade';
+      d.ui.countdown.textContent = `High Confidence (${d.strongConfirmationCount}/${STRONG_CONFIRMATION_PERIOD})`;
+      d.ui.tradeAdvice.textContent = `Growth: ${d.growthRate}% | Range: ±${d.symbolRanges[d.growthRate]}% | HIGH PROBABILITY`;
+      d.ui.signalQuality.textContent = 'EXCELLENT CONDITIONS';
+      d.lastStrongSignalTime = Date.now();
+      
+    } 
+    // REGULAR TRADE ACCUMULATOR conditions (much closer to strong signals)
+    else if (d.confirmationCount >= REGULAR_CONFIRMATION_PERIOD && 
+             signalStrength >= REGULAR_THRESHOLD &&
+             hasStrongConfirmations &&
+             hasMinimalWarnings &&
+             isVeryStable &&
+             hasGoodIndicators) {
+      
+      d.ui.signalText.textContent = 'TRADE ACCUMULATOR';
+      d.ui.signalText.className = 'signal-area signal-trade';
+      d.ui.countdown.textContent = `Confirmed (${d.confirmationCount}/${REGULAR_CONFIRMATION_PERIOD})`;
+      d.ui.tradeAdvice.textContent = `Growth: ${d.growthRate}% | Range: ±${d.symbolRanges[d.growthRate]}% | GOOD PROBABILITY`;
+      d.ui.signalQuality.textContent = 'GOOD CONDITIONS';
+      d.lastTradeSignalTime = Date.now(); // ADDED: Set regular trade signal time
+      
+    }
+    else if (signalStrength < WEAK_THRESHOLD || warningReasons.length >= 2) {
+      d.ui.signalText.textContent = 'NO TRADE';
+      d.ui.signalText.className = 'signal-area signal-no-trade';
+      d.ui.countdown.textContent = 'Weak signals or warnings';
+      d.ui.tradeAdvice.textContent = 'Wait for better market conditions';
+      d.ui.signalQuality.textContent = 'POOR CONDITIONS';
+    }
+    else if (d.confirmationCount > 0) {
+      d.ui.signalText.textContent = 'BUILDING SIGNAL';
+      d.ui.signalText.className = 'signal-area signal-building';
+      d.ui.countdown.textContent = `Confirming ${d.confirmationCount}/${REGULAR_CONFIRMATION_PERIOD}`;
+      d.ui.tradeAdvice.textContent = 'Monitoring market stability...';
+      d.ui.signalQuality.textContent = 'ANALYZING...';
+    }
+    else {
+      d.ui.signalText.textContent = 'ANALYZING';
+      d.ui.signalText.className = 'signal-area signal-waiting';
+      d.ui.countdown.textContent = 'Evaluating conditions';
+      d.ui.tradeAdvice.textContent = 'Processing technical indicators...';
+      d.ui.signalQuality.textContent = 'ANALYZING...';
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    buildCards();
+    connectWebSocket();
+    
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('growth-rate-btn')) {
+        const symbol = e.target.getAttribute('data-symbol');
+        const rate = parseInt(e.target.getAttribute('data-rate'));
+        
+        document.querySelectorAll(`[data-symbol="${symbol}"]`).forEach(btn => {
+          btn.classList.remove('active');
+        });
+        e.target.classList.add('active');
+        
+        if (dataStore[symbol]) {
+          dataStore[symbol].growthRate = rate;
+          dataStore[symbol].confirmationCount = 0;
+          dataStore[symbol].strongConfirmationCount = 0;
+          dataStore[symbol].lastSignal = null;
+          dataStore[symbol].lastStrongSignalTime = 0;
+          dataStore[symbol].lastTradeSignalTime = 0; // ADDED: Reset trade signal time
+          
+          const volatility = volatilities.find(v => v.symbol === symbol);
+          if (volatility) {
+            dataStore[symbol].ui.accumulatorInfo.textContent = 
+              `Range: ±${volatility.ranges[rate]}% | Max Ticks: ${ACCUMULATOR_PARAMS.maxTicks}`;
+          }
+        }
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
