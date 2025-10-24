@@ -1035,11 +1035,24 @@
       this.maxHistory = 50;
       this.consolidationCount = 0;
       this.stablePeriodCount = 0;
+      this.previousPrice = null;
     }
     
     update(price, growthRate, symbolRanges) {
       const range = symbolRanges[growthRate] || symbolRanges[3];
       const rangePercent = range;
+      
+      // NEW: Check if price difference exceeds range
+      let rangeExceededSignal = false;
+      if (this.previousPrice !== null) {
+        const priceDifference = Math.abs(price - this.previousPrice);
+        const priceDifferencePercent = (priceDifference / this.previousPrice) * 100;
+        
+        if (priceDifferencePercent > rangePercent) {
+          rangeExceededSignal = true;
+        }
+      }
+      this.previousPrice = price;
       
       this.rangeAnalysis.push({
         price,
@@ -1071,7 +1084,8 @@
         rangePercent,
         upperBarrier: price * (1 + rangePercent/100),
         lowerBarrier: price * (1 - rangePercent/100),
-        isConsolidating: this.consolidationCount >= 5
+        isConsolidating: this.consolidationCount >= 5,
+        rangeExceeded: rangeExceededSignal // NEW: Return range exceeded signal
       };
     }
     
@@ -1429,6 +1443,18 @@
     let warningReasons = [];
     
     const currentTime = Date.now();
+    
+    // NEW: Check for range exceeded signal (highest priority)
+    if (accumulatorAnalysis.rangeExceeded) {
+      d.ui.signalText.textContent = 'TRADE ACCUMULATOR';
+      d.ui.signalText.className = 'signal-area signal-strong-trade';
+      d.ui.countdown.textContent = 'RANGE EXCEEDED SIGNAL';
+      d.ui.tradeAdvice.textContent = `Growth: ${d.growthRate}% | Range: ±${d.symbolRanges[d.growthRate]}% | PRICE MOVEMENT EXCEEDS RANGE`;
+      d.ui.signalQuality.textContent = 'RANGE BREACH DETECTED';
+      d.ui.explanation.textContent = `Price movement exceeded the ${d.symbolRanges[d.growthRate]}% range for ${d.growthRate}% growth rate`;
+      d.lastStrongSignalTime = Date.now();
+      return; // Exit early as range exceeded signal takes priority
+    }
     
     // MODIFIED: Check if we should maintain ANY trade signal for 4 seconds
     if ((d.lastStrongSignalTime > 0 && (currentTime - d.lastStrongSignalTime) < SIGNAL_PERSISTENCE_TIME) ||
