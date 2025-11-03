@@ -1,465 +1,1376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading - HACKSVIBEZ_DERIV</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #00f0ff;
-      --secondary: #0062ff;
-      --dark: #0a0a1a;
-      --light: #e0e0ff;
-      --accent: #ff00aa;
-    }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: var(--dark);
-      color: var(--light);
-      font-family: 'Montserrat', sans-serif;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .particles {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-    
-    .particle {
-      position: absolute;
-      background-color: rgba(0, 200, 255, 0.5);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    
-    .loading-container {
-      text-align: center;
-      z-index: 10;
-      max-width: 800px;
-      padding: 2rem;
-      background: rgba(10, 10, 26, 0.8);
-      border-radius: 15px;
-      box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(0, 200, 255, 0.2);
-      transform: perspective(1000px) rotateX(0deg);
-      transition: transform 0.5s ease;
-      animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0) perspective(1000px) rotateX(0deg); }
-      50% { transform: translateY(-20px) perspective(1000px) rotateX(5deg); }
-    }
-    
-    .loading-container h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 700;
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
-      letter-spacing: 2px;
-      position: relative;
-      display: inline-block;
-    }
-    
-    .loading-container h1::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      border-radius: 50%;
-    }
-    
-    .loading-container p {
-      margin-bottom: 2rem;
-      font-weight: 300;
-      line-height: 1.6;
-      color: rgba(224, 224, 255, 0.8);
-    }
-    
-    .progress-container {
-      width: 100%;
-      height: 8px;
-      background-color: rgba(51, 51, 51, 0.5);
-      border-radius: 10px;
-      margin: 2rem auto;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-      border-radius: 10px;
-      width: 0%;
-      transition: width 0.3s ease-out;
-      position: relative;
-      box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
-    }
-    
-    .progress-bar::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, 
-                  transparent, 
-                  rgba(255, 255, 255, 0.4), 
-                  transparent);
-      animation: shine 2s infinite;
-    }
-    
-    @keyframes shine {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-    
-    .percentage {
-      font-size: 1.5rem;
-      font-family: 'Orbitron', sans-serif;
-      margin: 1rem 0;
-      color: var(--primary);
-      text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
-    }
-    
-    .status-message {
-      font-size: 0.9rem;
-      color: rgba(224, 224, 255, 0.6);
-      margin-top: 1rem;
-      min-height: 20px;
-    }
-    
-    .loading-features {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      margin: 2rem 0;
-    }
-    
-    .feature {
-      flex: 1;
-      min-width: 150px;
-      margin: 0.5rem;
-      padding: 1rem;
-      background: rgba(0, 98, 255, 0.1);
-      border-radius: 8px;
-      border-left: 3px solid var(--primary);
-      transition: all 0.3s ease;
-    }
-    
-    .feature:hover {
-      transform: translateY(-5px);
-      background: rgba(0, 98, 255, 0.2);
-      box-shadow: 0 5px 15px rgba(0, 98, 255, 0.2);
-    }
-    
-    .feature-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      color: var(--primary);
-    }
-    
-    .feature-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-    }
-    
-    .feature-desc {
-      font-size: 0.7rem;
-      color: rgba(224, 224, 255, 0.6);
-    }
-    
-    .cyber-grid {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: 
-        linear-gradient(rgba(0, 200, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 200, 255, 0.05) 1px, transparent 1px);
-      background-size: 30px 30px;
-      z-index: -1;
-      opacity: 0.5;
-    }
-    
-    .binary-rain {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      opacity: 0.1;
-      pointer-events: none;
-    }
-    
-    .binary-digit {
-      position: absolute;
-      color: var(--primary);
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>M-B-T 5-TICK ACCUMULATOR ANALYZER</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #121212; 
+    color: #eee;
+    padding: 8px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #app {
+    height: calc(100vh - 16px);
+    max-width: 100%;
+    background: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 87, 255, 0.6);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Header Styles */
+  header {
+    padding: 10px;
+    font-size: clamp(14px, 4vw, 18px);
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(90deg,#001eff29,#7700ff2d);
+    color: white;
+    position: relative;
+    overflow: hidden;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Connection Status Styles */
+  .connection-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(0, 87, 255, 0.5);
+    box-shadow: 0 0 10px rgba(0, 87, 255, 0.3);
+  }
+  
+  .wifi-icon {
+    width: 16px;
+    height: 16px;
+    position: relative;
+  }
+  
+  .wifi-icon::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    background: radial-gradient(circle, transparent 30%, currentColor 30%, currentColor 40%, transparent 40%),
+                radial-gradient(circle, transparent 50%, currentColor 50%, currentColor 60%, transparent 60%),
+                radial-gradient(circle, transparent 70%, currentColor 70%, currentColor 80%, transparent 80%);
+    border-radius: 50%;
+  }
+  
+  .connected { color: #0f0; }
+  .disconnected { color: #f00; }
+  .connecting { color: #ff0; }
+  
+  /* Animated Text Styles */
+  .animated-text {
+    display: inline-block;
+    position: relative;
+  }
+  
+  .animated-letter {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px) rotate(10deg);
+    animation: letterReveal 0.8s forwards;
+    text-shadow: 0 0 8px currentColor;
+    transition: color 1.5s ease-in-out;
+  }
+  
+  @keyframes letterReveal {
+    0% {
       opacity: 0;
-      animation: fall linear infinite;
+      transform: translateY(20px) rotate(10deg) scale(0.8);
     }
-    
-    @keyframes fall {
-      0% { transform: translateY(-100px); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(100vh); opacity: 0; }
+    50% {
+      opacity: 0.7;
+      transform: translateY(-5px) rotate(-5deg) scale(1.1);
     }
-    
-    .logo {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 1rem;
-      background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      animation: pulse 2s infinite;
+    100% {
+      opacity: 1;
+      transform: translateY(0) rotate(0) scale(1);
     }
-    
-    .logo-inner {
-      width: 60px;
-      height: 60px;
-      background: var(--dark);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: bold;
-      font-size: 1.5rem;
-      color: var(--primary);
-      box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+  }
+  
+  .main-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+    padding: 8px;
+    overflow-y: auto;
+    height: 100%;
+  }
+  .vol-card {
+    background: #252525;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+  }
+  .vol-title {
+    font-size: clamp(12px, 3vw, 14px);
+    color: #7db8ff;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    font-size: clamp(10px, 2.5vw, 12px);
+  }
+  .data-item {
+    display: flex;
+    justify-content: space-between;
+  }
+  .data-label {
+    color: #7db8ff;
+  }
+  .indicator-value {
+    font-weight: 600;
+    color: white;
+  }
+  .growth-rate-selector {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .growth-rate-btn {
+    background: #121212;
+    border: 1px solid #0057ff;
+    border-radius: 6px;
+    color: white;
+    padding: 4px 2px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .growth-rate-btn.active {
+    background: #0057ff;
+    color: white;
+  }
+  .accumulator-info {
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 87, 255, 0.1);
+    border-radius: 6px;
+    font-size: clamp(9px, 2.5vw, 11px);
+    color: #7db8ff;
+  }
+  .signal-area {
+    margin-top: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    font-size: clamp(11px, 3vw, 13px);
+    text-align: center;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .signal-waiting {
+    background: rgba(180, 180, 180, 0.1);
+    color: #aaa;
+    border: 1px solid rgba(150, 150, 150, 0.3);
+  }
+  .signal-higher {
+    background: rgba(50, 205, 50, 0.2);
+    color: #32cd32;
+    border: 1px solid rgba(50, 205, 50, 0.6);
+    box-shadow: 0 0 15px rgba(50, 205, 50, 0.4);
+    text-shadow: 0 0 8px rgba(50, 205, 50, 0.6);
+    animation: pulse-trade 2s infinite;
+  }
+  .signal-lower {
+    background: rgba(255, 0, 0, 0.15);
+    color: #f00;
+    border: 1px solid rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+  .signal-building {
+    background: rgba(255, 165, 0, 0.15);
+    color: #ffa500;
+    border: 1px solid rgba(255, 165, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+    text-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
+    animation: pulse-building 1.5s infinite;
+  }
+  .signal-neutral {
+    background: rgba(0, 8, 255, 0.15);
+    color: rgb(0, 30, 255);
+    border: 1px solid rgba(64, 0, 255, 0.5);
+    box-shadow: 0 0 10px rgba(89, 0, 255, 0.3);
+    text-shadow: 0 0 5px rgba(34, 0, 255, 0.5);
+    animation: pulse-weak 2s infinite;
+  }
+  .signal-strong-higher {
+    background: rgba(0, 255, 0, 0.25);
+    color: #0f0;
+    border: 2px solid rgba(0, 255, 0, 0.8);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    animation: pulse-strong 0.5s infinite alternate;
+  }
+  .signal-strong-lower {
+    background: rgba(255, 0, 0, 0.25);
+    color: #ff4444;
+    border: 2px solid rgba(255, 0, 0, 0.8);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+    animation: pulse-strong-lower 0.5s infinite alternate;
+  }
+  @keyframes pulse-building {
+    0% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 165, 0, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.3); }
+  }
+  @keyframes pulse-weak {
+    0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); }
+    100% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.3); }
+  }
+  @keyframes pulse-trade {
+    0% { 
+      box-shadow: 0 0 8px rgba(50, 205, 50, 0.4);
+      transform: scale(1);
     }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    50% { 
+      box-shadow: 0 0 18px rgba(50, 205, 50, 0.6);
+      transform: scale(1.01);
     }
-    
-    @media (max-width: 768px) {
-      .loading-container {
-        width: 90%;
-        padding: 1.5rem;
-      }
-      
-      .loading-container h1 {
-        font-size: 2rem;
-      }
-      
-      .feature {
-        min-width: 120px;
-        padding: 0.8rem;
-      }
+    100% { 
+      box-shadow: 0 0 8px rgba(50, 205, 50, 0.4);
+      transform: scale(1);
     }
-  </style>
+  }
+  @keyframes pulse-strong {
+    0% { 
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+      transform: scale(1);
+    }
+    100% { 
+      box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
+      transform: scale(1.02);
+    }
+  }
+  @keyframes pulse-strong-lower {
+    0% { 
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+      transform: scale(1);
+    }
+    100% { 
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+      transform: scale(1.02);
+    }
+  }
+  .countdown {
+    font-size: clamp(10px, 2.5vw, 11px);
+    color: #00bbff;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .indicator-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .indicator-name {
+    color: #7db8ff;
+    font-size: 10px;
+  }
+  .indicator-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 2px;
+    width: 100%;
+  }
+  .positive-bar {
+    background: linear-gradient(90deg, rgba(0,255,0,0.3), rgba(0,255,0,0.8));
+  }
+  .negative-bar {
+    background: linear-gradient(90deg, rgba(255,0,0,0.3), rgba(255,0,0,0.8));
+  }
+  .neutral-bar {
+    background: rgba(150,150,150,0.3);
+  }
+  .indicator-strength {
+    font-size: 9px;
+    color: #aaa;
+    text-align: right;
+  }
+  .signal-explanation {
+    font-size: 9px;
+    color: #ccc;
+    margin-top: 4px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .trade-advice {
+    font-size: 10px;
+    color: #7db8ff;
+    margin-top: 4px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .advanced-indicators {
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 87, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 87, 255, 0.2);
+  }
+  .advanced-indicator-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    font-size: 9px;
+  }
+  .confidence-meter {
+    margin-top: 4px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ffaa00, #44ff44);
+    transition: width 0.5s ease;
+  }
+  .signal-quality {
+    font-size: 8px;
+    text-align: center;
+    margin-top: 2px;
+    color: #7db8ff;
+  }
+  
+  /* Chart container styles */
+  .chart-container {
+    height: 120px;
+    margin: 8px 0;
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+  }
+  .chart-canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .chart-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.3);
+  }
+  .chart-trend-up {
+    color: #00ff00;
+  }
+  .chart-trend-down {
+    color: #ff0000;
+  }
+  .chart-trend-range {
+    color: #ffff00;
+  }
+  .chart-trend-potential-range {
+    color: #00aaff;
+  }
+  
+  @media (max-width: 600px) {
+    .main-content {
+      grid-template-columns: 1fr 1fr;
+    }
+    .vol-card {
+      padding: 8px;
+    }
+    .connection-status {
+      font-size: 10px;
+      padding: 4px 8px;
+    }
+  }
+  @media (max-width: 400px) {
+    .main-content {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
 </head>
 <body>
-  <div class="cyber-grid"></div>
-  <div class="binary-rain" id="binaryRain"></div>
-  <div class="particles" id="particles"></div>
-  
-  <div class="loading-container">
-    <div class="logo">
-      <div class="logo-inner">HVD</div>
+  <div id="app">
+    <header>
+      <div id="header-text" class="animated-text"></div>
+    </header>
+    <div id="connection-status" class="connection-status disconnected">
+      <div class="wifi-icon"></div>
+      <span id="connection-text"></span>
     </div>
-    
-    <h1><font color="blue">HACKSVIBEZ</span></h1> <h1><font color="red">DERIV</span></h1>
-    <p>Your Premium Trading Platform with Advanced Analytics and Real-time Market Data</p>
-    
-    <div class="loading-features">
-      <div class="feature">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">LIGHTNING FAST</div>
-        <div class="feature-desc">Ultra-low latency execution</div>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">🔒</div>
-        <div class="feature-title">SECURE</div>
-        <div class="feature-desc">Bank-grade encryption</div>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">📊</div>
-        <div class="feature-title">ANALYTICS</div>
-        <div class="feature-desc">Advanced market insights</div>
-      </div>
-    </div>
-    
-    <p id="statusMessage">Initializing trading engine...</p>
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="percentage" id="percentage">0%</div>
-    <div class="status-message" id="detailedStatus"></div>
+    <div class="main-content" id="cards-container"></div>
   </div>
+<script>
+(() => {
+  // Define volatility indices with their specific ranges
+  const volatilities = [
+    { 
+      symbol: '1HZ10V', 
+      name: 'Volatility 10 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.409, 
+        2: 0.383, 
+        3: 0.359, 
+        4: 0.342, 
+        5: 0.325 
+      }
+    },
+    { 
+      symbol: '1HZ15V', 
+      name: 'Volatility 15 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.8684, 
+        2: 0.8118, 
+        3: 0.7613, 
+        4: 0.7244, 
+        5: 0.6894
+      }
+    },
+    { 
+      symbol: '1HZ25V', 
+      name: 'Volatility 25 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 75.918, 
+        2: 70.962, 
+        3: 66.548, 
+        4: 63.322, 
+        5: 60.250
+      }
+    },
+    { 
+      symbol: '1HZ30V', 
+      name: 'Volatility 30 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.8225, 
+        2: 0.7689, 
+        3: 0.7210, 
+        4: 0.6861, 
+        5: 0.6531
+      }
+    },
+    { 
+      symbol: '1HZ50V', 
+      name: 'Volatility 50 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 37.933, 
+        2: 35.446, 
+        3: 33.244, 
+        4: 31.630, 
+        5: 30.112
+      }
+    },
+    { 
+      symbol: '1HZ75V', 
+      name: 'Volatility 75 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 1.342, 
+        2: 1.256, 
+        3: 1.179, 
+        4: 1.123, 
+        5: 1.069
+      }
+    },
+    { 
+      symbol: '1HZ90V', 
+      name: 'Volatility 90 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 7.9277, 
+        2: 7.3972, 
+        3: 6.9230, 
+        4: 6.570, 
+        5: 6.2771 
+      }
+    },
+    { 
+      symbol: '1HZ100V', 
+      name: 'Volatility 100 (1)S Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.346, 
+        2: 0.324, 
+        3: 0.304, 
+        4: 0.289, 
+        5: 0.275
+      }
+    },
+    { 
+      symbol: 'R_10', 
+      name: 'Volatility 10 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.3518, 
+        2: 0.3289, 
+        3: 0.3084, 
+        4: 0.2934, 
+        5: 0.2793 
+      }
+    },
+    { 
+      symbol: 'R_25', 
+      name: 'Volatility 25 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.3810, 
+        2: 0.3562, 
+        3: 0.3342, 
+        4: 0.3178, 
+        5: 0.3096
+      }
+    },
+    { 
+      symbol: 'R_50', 
+      name: 'Volatility 50 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.04089, 
+        2: 0.03823, 
+        3: 0.03588, 
+        4: 0.03415, 
+        5: 0.03251 
+      }
+    },
+    { 
+      symbol: 'R_75', 
+      name: 'Volatility 75 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 27.48408, 
+        2: 25.68320, 
+        3: 24.10445, 
+        4: 22.93000, 
+        5: 21.81101
+      }
+    },
+    { 
+      symbol: 'R_100', 
+      name: 'Volatility 100 Index', 
+      growthRate: 3,
+      ranges: {
+        1: 0.558, 
+        2: 0.522, 
+        3: 0.489, 
+        4: 0.466, 
+        5: 0.444
+      }
+    }
+  ];
+  
+  // Global accumulator parameters
+  const ACCUMULATOR_PARAMS = {
+    maxTicks: 230,
+    maxPayout: 10000,
+    growthRates: [1, 2, 3, 4, 5]
+  };
+  
+  const dataStore = {};
+  let ws = null;
+  let reconnectTimeout = null;
+  const MIN_DATA_POINTS = 100;
+  const SIGNAL_PERSISTENCE_TIME = 4000; // 4 seconds
 
-  <script>
-    // Particle effect
-    const particlesContainer = document.getElementById('particles');
-    const particleCount = 50;
-    
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      particle.classList.add('particle');
-      
-      const size = Math.random() * 5 + 1;
-      const posX = Math.random() * window.innerWidth;
-      const posY = Math.random() * window.innerHeight;
-      const delay = Math.random() * 5;
-      const duration = Math.random() * 10 + 10;
-      
-      particle.style.width = `${size}px`;
-      particle.style.height = `${size}px`;
-      particle.style.left = `${posX}px`;
-      particle.style.top = `${posY}px`;
-      particle.style.opacity = Math.random() * 0.5 + 0.1;
-      particle.style.animation = `float ${duration}s ease-in-out ${delay}s infinite`;
-      
-      document.getElementById('particles').appendChild(particle);
+  // Color cycling variables
+  let colorCycleInterval;
+  const colorSchemes = [
+    // Blue theme
+    { colors: ['#0057ff', '#00c8ff', '#7db8ff'], statusColors: ['#0f0', '#7db8ff', '#00c8ff'] },
+    // Green theme
+    { colors: ['#00ff00', '#7dff7d', '#32cd32'], statusColors: ['#00ff00', '#7dff7d', '#32cd32'] },
+    // Purple theme
+    { colors: ['#8a2be2', '#9370db', '#ba55d3'], statusColors: ['#8a2be2', '#9370db', '#ba55d3'] },
+    // Orange theme
+    { colors: ['#ff8c00', '#ffa500', '#ffd700'], statusColors: ['#ff8c00', '#ffa500', '#ffd700'] },
+    // Pink theme
+    { colors: ['#ff1493', '#ff69b4', '#ffb6c1'], statusColors: ['#ff1493', '#ff69b4', '#ffb6c1'] },
+    // Cyan theme
+    { colors: ['#00ffff', '#40e0d0', '#20b2aa'], statusColors: ['#00ffff', '#40e0d0', '#20b2aa'] }
+  ];
+  let currentColorScheme = 0;
+
+  // SIMULATED DATA FOR TESTING
+  let simulatedDataCount = 0;
+  const simulatedBasePrices = {};
+  
+  // Initialize base prices for all symbols
+  volatilities.forEach(v => {
+    if (v.symbol.includes('10')) {
+      simulatedBasePrices[v.symbol] = 15.234;
+    } else if (v.symbol.includes('15')) {
+      simulatedBasePrices[v.symbol] = 18.567;
+    } else if (v.symbol.includes('25')) {
+      simulatedBasePrices[v.symbol] = 22.891;
+    } else if (v.symbol.includes('30')) {
+      simulatedBasePrices[v.symbol] = 25.432;
+    } else if (v.symbol.includes('50')) {
+      simulatedBasePrices[v.symbol] = 35.678;
+    } else if (v.symbol.includes('75')) {
+      simulatedBasePrices[v.symbol] = 45.123;
+    } else if (v.symbol.includes('90')) {
+      simulatedBasePrices[v.symbol] = 55.789;
+    } else if (v.symbol.includes('100')) {
+      simulatedBasePrices[v.symbol] = 65.432;
+    } else {
+      simulatedBasePrices[v.symbol] = 30.125;
+    }
+  });
+  
+  function generateSimulatedTick(symbol) {
+    const basePrice = simulatedBasePrices[symbol];
+    let volatilityNum = 25;
+    const match = symbol.match(/(\d+)/);
+    if (match) {
+      volatilityNum = parseInt(match[1]);
     }
     
-    // Binary rain effect
-    const binaryRain = document.getElementById('binaryRain');
-    const binaryChars = ['0', '1', '0010', '0101', '1010', '1100'];
+    // Create realistic price movements with occasional trends
+    const volatility = volatilityNum / 2000;
+    const change = (Math.random() - 0.5) * volatility * basePrice;
+    const newPrice = basePrice + change;
     
-    function createBinaryDigit() {
-      const digit = document.createElement('div');
-      digit.classList.add('binary-digit');
-      digit.textContent = binaryChars[Math.floor(Math.random() * binaryChars.length)];
-      digit.style.left = `${Math.random() * 100}%`;
-      digit.style.animationDuration = `${Math.random() * 5 + 3}s`;
-      binaryRain.appendChild(digit);
-      
-      setTimeout(() => {
-        digit.remove();
-      }, 8000);
+    simulatedBasePrices[symbol] = newPrice;
+    
+    return {
+      symbol: symbol,
+      quote: newPrice.toFixed(6),
+      id: `sim_${symbol}_${Date.now()}`,
+      pip_size: 0.001
+    };
+  }
+  
+  function startSimulatedData() {
+    setInterval(() => {
+      volatilities.forEach(v => {
+        const tick = generateSimulatedTick(v.symbol);
+        handleTick(tick);
+      });
+    }, 1000);
+  }
+  
+  // Bollinger Bands Calculator
+  class BollingerBands {
+    constructor(period = 20, multiplier = 2) {
+      this.period = period;
+      this.multiplier = multiplier;
+      this.prices = [];
     }
     
-    setInterval(createBinaryDigit, 100);
-    
-    // Progress bar animation
-    let progress = 0;
-    const progressBar = document.getElementById('progressBar');
-    const percentage = document.getElementById('percentage');
-    const statusMessage = document.getElementById('statusMessage');
-    const detailedStatus = document.getElementById('detailedStatus');
-    
-    const statusMessages = [
-      "Loading core modules...",
-      "Establishing secure connection...",
-      "Authenticating session...",
-      "Syncing market data...",
-      "Initializing trading algorithms...",
-      "Optimizing performance...",
-      "Finalizing setup..."
-    ];
-    
-    const detailedMessages = [
-      "✓ Memory allocation complete",
-      "✓ Encryption protocols enabled",
-      "✓ Market data feed connected",
-      "✓ Order execution system ready",
-      "✓ User interface initialized",
-      "✓ Real-time analytics loaded"
-    ];
-    
-    const interval = setInterval(() => {
-      progress += 1;
-      progressBar.style.width = `${progress}%`;
-      percentage.textContent = `${progress}%`;
+    update(price) {
+      this.prices.push(price);
       
-      // Update status messages
-      if (progress % 15 === 0) {
-        const randomStatus = statusMessages[Math.floor(Math.random() * statusMessages.length)];
-        statusMessage.textContent = randomStatus;
+      if (this.prices.length > this.period) {
+        this.prices.shift();
       }
       
-      // Update detailed status
-      if (progress % 20 === 0) {
-        const randomDetail = detailedMessages[Math.floor(Math.random() * detailedMessages.length)];
-        detailedStatus.textContent = randomDetail;
-        
-        // Flash effect
-        detailedStatus.style.opacity = 0;
-        setTimeout(() => {
-          detailedStatus.style.opacity = 1;
-          detailedStatus.style.transition = 'opacity 0.3s';
-        }, 50);
+      if (this.prices.length < this.period) {
+        return null;
       }
       
-      // Add some randomness to progress
-      if (Math.random() > 0.7 && progress < 95) {
-        progress += Math.random() * 2;
-      }
+      const sum = this.prices.reduce((a, b) => a + b, 0);
+      const sma = sum / this.period;
+      const variance = this.prices.reduce((a, b) => a + Math.pow(b - sma, 2), 0) / this.period;
+      const stdDev = Math.sqrt(variance);
       
-      if (progress >= 100) {
-        clearInterval(interval);
-        statusMessage.textContent = "Ready! Redirecting to dashboard...";
-        detailedStatus.textContent = "✓ All systems operational";
-        
-        // Add completion effects
-        progressBar.style.background = `linear-gradient(90deg, var(--primary), #00ff88)`;
-        percentage.style.color = '#00ff88';
-        
-        setTimeout(() => {
-          window.location.href = 'backagain.htm';
-        }, 1500);
-      }
-    }, 50);
+      const upper = sma + (this.multiplier * stdDev);
+      const lower = sma - (this.multiplier * stdDev);
+      const bandwidth = (this.multiplier * stdDev * 2) / sma * 100;
+      const percentB = (price - lower) / (upper - lower);
+      
+      // Check for squeeze and band touches
+      const isSqueeze = bandwidth < 8;
+      const isTouchingUpper = price >= upper * 0.995;
+      const isTouchingLower = price <= lower * 1.005;
+      
+      return {
+        upper,
+        middle: sma,
+        lower,
+        bandwidth,
+        percentB,
+        isSqueeze: isSqueeze,
+        isExpanding: bandwidth > 15,
+        isTouchingUpper: isTouchingUpper,
+        isTouchingLower: isTouchingLower,
+        position: percentB < 0.2 ? 'lower' : percentB > 0.8 ? 'upper' : 'middle'
+      };
+    }
+  }
+  
+  // Momentum Strength Calculator
+  class MomentumStrength {
+    constructor(lookbackPeriod = 10) {
+      this.lookbackPeriod = lookbackPeriod;
+      this.prices = [];
+      this.tickTimestamps = [];
+    }
     
-    // 3D tilt effect
-    const container = document.querySelector('.loading-container');
+    update(price) {
+      const now = Date.now();
+      this.prices.push(price);
+      this.tickTimestamps.push(now);
+      
+      if (this.prices.length > this.lookbackPeriod) {
+        this.prices.shift();
+        this.tickTimestamps.shift();
+      }
+      
+      if (this.prices.length < 2) {
+        return null;
+      }
+      
+      // Calculate momentum direction and strength
+      const momentum = price - this.prices[0];
+      const momentumPercent = (momentum / this.prices[0]) * 100;
+      
+      // Calculate tick speed (ticks per second)
+      let tickSpeed = 0;
+      if (this.tickTimestamps.length >= 2) {
+        const timeDiff = (this.tickTimestamps[this.tickTimestamps.length - 1] - this.tickTimestamps[0]) / 1000;
+        tickSpeed = this.tickTimestamps.length / timeDiff;
+      }
+      
+      // Determine momentum direction
+      let direction = 'neutral';
+      if (momentumPercent > 0.05) direction = 'up';
+      else if (momentumPercent < -0.05) direction = 'down';
+      
+      return {
+        direction: direction,
+        strength: Math.abs(momentumPercent),
+        tickSpeed: tickSpeed,
+        isFast: tickSpeed > 2,
+        isSlow: tickSpeed < 0.5
+      };
+    }
+  }
+  
+  // Tick Count Bias Calculator
+  class TickCountBias {
+    constructor(lookbackPeriod = 100) {
+      this.lookbackPeriod = lookbackPeriod;
+      this.priceChanges = [];
+    }
     
-    container.addEventListener('mousemove', (e) => {
-      const x = e.clientX - container.getBoundingClientRect().left;
-      const y = e.clientY - container.getBoundingClientRect().top;
+    update(currentPrice, previousPrice) {
+      if (previousPrice === null) {
+        return null;
+      }
       
-      const centerX = container.offsetWidth / 2;
-      const centerY = container.offsetHeight / 2;
+      const change = currentPrice - previousPrice;
+      this.priceChanges.push(change > 0 ? 1 : change < 0 ? -1 : 0);
       
-      const angleX = (y - centerY) / 20;
-      const angleY = (centerX - x) / 20;
+      if (this.priceChanges.length > this.lookbackPeriod) {
+        this.priceChanges.shift();
+      }
       
-      container.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg)`;
+      if (this.priceChanges.length < this.lookbackPeriod) {
+        return null;
+      }
+      
+      const upTicks = this.priceChanges.filter(change => change > 0).length;
+      const downTicks = this.priceChanges.filter(change => change < 0).length;
+      const upBiasPercent = (upTicks / this.lookbackPeriod) * 100;
+      const downBiasPercent = (downTicks / this.lookbackPeriod) * 100;
+      
+      let bias = 'neutral';
+      if (upBiasPercent > 60) bias = 'up';
+      else if (downBiasPercent > 60) bias = 'down';
+      
+      return {
+        upTicks: upTicks,
+        downTicks: downTicks,
+        upBiasPercent: upBiasPercent,
+        downBiasPercent: downBiasPercent,
+        bias: bias,
+        hasStrongBias: upBiasPercent > 65 || downBiasPercent > 65
+      };
+    }
+  }
+  
+  // Chart class for visualizing price trends
+  class PriceChart {
+    constructor(canvasId, symbol) {
+      this.canvas = document.getElementById(canvasId);
+      this.ctx = this.canvas.getContext('2d');
+      this.symbol = symbol;
+      this.prices = [];
+      this.maxPoints = 50;
+      this.trend = 'neutral';
+      this.trendText = 'Analyzing...';
+      this.trendClass = '';
+    }
+    
+    update(price, trendAnalysis) {
+      this.prices.push(price);
+      
+      if (this.prices.length > this.maxPoints) {
+        this.prices.shift();
+      }
+      
+      // Determine trend based on analysis
+      if (trendAnalysis.signal === 'HIGHER') {
+        this.trend = 'uptrend';
+        this.trendText = 'HIGHER SIGNAL';
+        this.trendClass = 'chart-trend-up';
+      } else if (trendAnalysis.signal === 'LOWER') {
+        this.trend = 'downtrend';
+        this.trendText = 'LOWER SIGNAL';
+        this.trendClass = 'chart-trend-down';
+      } else if (trendAnalysis.signal === 'NEUTRAL') {
+        this.trend = 'neutral';
+        this.trendText = 'NEUTRAL';
+        this.trendClass = 'chart-trend-range';
+      } else {
+        this.trend = 'analyzing';
+        this.trendText = 'ANALYZING';
+        this.trendClass = '';
+      }
+      
+      this.draw();
+    }
+    
+    draw() {
+      const width = this.canvas.width;
+      const height = this.canvas.height;
+      
+      // Clear canvas
+      this.ctx.clearRect(0, 0, width, height);
+      
+      if (this.prices.length < 2) return;
+      
+      // Calculate min and max for scaling
+      const minPrice = Math.min(...this.prices);
+      const maxPrice = Math.max(...this.prices);
+      const priceRange = maxPrice - minPrice || 1;
+      
+      // Set chart color based on trend
+      let lineColor, fillColor;
+      switch(this.trend) {
+        case 'uptrend':
+          lineColor = '#00ff00';
+          fillColor = 'rgba(0, 255, 0, 0.1)';
+          break;
+        case 'downtrend':
+          lineColor = '#ff0000';
+          fillColor = 'rgba(255, 0, 0, 0.1)';
+          break;
+        case 'neutral':
+          lineColor = '#ffff00';
+          fillColor = 'rgba(255, 255, 0, 0.1)';
+          break;
+        default:
+          lineColor = '#cccccc';
+          fillColor = 'rgba(200, 200, 200, 0.1)';
+      }
+      
+      // Draw price line
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, height - ((this.prices[0] - minPrice) / priceRange * height));
+      
+      for (let i = 1; i < this.prices.length; i++) {
+        const x = (i / (this.prices.length - 1)) * width;
+        const y = height - ((this.prices[i] - minPrice) / priceRange * height);
+        this.ctx.lineTo(x, y);
+      }
+      
+      this.ctx.strokeStyle = lineColor;
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
+      
+      // Fill area under the line
+      this.ctx.lineTo(width, height);
+      this.ctx.lineTo(0, height);
+      this.ctx.closePath();
+      this.ctx.fillStyle = fillColor;
+      this.ctx.fill();
+      
+      // Draw trend overlay text
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      this.ctx.fillRect(width/2 - 60, 10, 120, 20);
+      this.ctx.fillStyle = lineColor;
+      this.ctx.font = 'bold 12px Arial';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(this.trendText, width/2, 25);
+    }
+  }
+  
+  // Text animation function
+  function animateText(element, text, colors = ['#00c8ff', '#ffffff', '#7db8ff']) {
+    element.innerHTML = '';
+    
+    for (let i = 0; i < text.length; i++) {
+      const letter = document.createElement('span');
+      letter.className = 'animated-letter';
+      letter.textContent = text[i];
+      
+      // Assign different colors based on position
+      if (i < text.length / 3) {
+        letter.style.color = colors[0];
+      } else if (i < (text.length * 2) / 3) {
+        letter.style.color = colors[1];
+      } else {
+        letter.style.color = colors[2];
+      }
+      
+      // Stagger the animation
+      letter.style.animationDelay = `${i * 0.1}s`;
+      
+      element.appendChild(letter);
+    }
+  }
+  
+  // Update text colors for color cycling
+  function updateTextColors() {
+    const scheme = colorSchemes[currentColorScheme];
+    
+    // Update main header
+    const headerText = document.getElementById('header-text');
+    const letters = headerText.querySelectorAll('.animated-letter');
+    letters.forEach((letter, i) => {
+      if (i < letters.length / 3) {
+        letter.style.color = scheme.colors[0];
+      } else if (i < (letters.length * 2) / 3) {
+        letter.style.color = scheme.colors[1];
+      } else {
+        letter.style.color = scheme.colors[2];
+      }
     });
     
-    container.addEventListener('mouseleave', () => {
-      container.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+    // Update connection status text
+    const connectionText = document.getElementById('connection-text');
+    const connectionLetters = connectionText.querySelectorAll('.animated-letter');
+    if (connectionLetters.length > 0) {
+      connectionLetters.forEach((letter, i) => {
+        if (i < connectionLetters.length / 3) {
+          letter.style.color = scheme.statusColors[0];
+        } else if (i < (connectionLetters.length * 2) / 3) {
+          letter.style.color = scheme.statusColors[1];
+        } else {
+          letter.style.color = scheme.statusColors[2];
+        }
+      });
+    }
+    
+    // Update WiFi icon color
+    const wifiIcon = document.querySelector('.wifi-icon');
+    wifiIcon.style.color = scheme.statusColors[0];
+    
+    // Move to next color scheme
+    currentColorScheme = (currentColorScheme + 1) % colorSchemes.length;
+  }
+  
+  // Start color cycling
+  function startColorCycling() {
+    if (colorCycleInterval) {
+      clearInterval(colorCycleInterval);
+    }
+    
+    colorCycleInterval = setInterval(updateTextColors, 3000); // Change every 3 seconds
+  }
+  
+  function buildCards() {
+    const container = document.getElementById('cards-container');
+    volatilities.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'vol-card';
+      card.innerHTML = `
+        <div class="vol-title">${v.name}</div>
+        
+        <!-- Chart container -->
+        <div class="chart-container">
+          <canvas id="chart-${v.symbol}" class="chart-canvas" width="280" height="120"></canvas>
+          <div id="chart-overlay-${v.symbol}" class="chart-overlay">Loading chart...</div>
+        </div>
+        
+        <div class="data-grid">
+          <div class="data-item"><span class="data-label">Price:</span><span id="price-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Momentum:</span><span id="momentum-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">BB Position:</span><span id="bbPosition-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">BB Squeeze:</span><span id="bbSqueeze-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Tick Bias:</span><span id="tickBias-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Tick Speed:</span><span id="tickSpeed-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Up Ticks:</span><span id="upTicks-${v.symbol}" class="indicator-value">-</span></div>
+          <div class="data-item"><span class="data-label">Down Ticks:</span><span id="downTicks-${v.symbol}" class="indicator-value">-</span></div>
+        </div>
+        
+        <div class="growth-rate-selector">
+          ${ACCUMULATOR_PARAMS.growthRates.map(rate => `
+            <button class="growth-rate-btn ${rate === v.growthRate ? 'active' : ''}" 
+                    data-symbol="${v.symbol}" data-rate="${rate}">${rate}%</button>
+          `).join('')}
+        </div>
+        
+        <div class="accumulator-info" id="accumulator-info-${v.symbol}">
+          Range: ±${v.ranges[v.growthRate]}% | Max Ticks: ${ACCUMULATOR_PARAMS.maxTicks}
+        </div>
+        
+        <div id="signal-text-${v.symbol}" class="signal-area signal-waiting">GATHERING DATA</div>
+        <div id="countdown-${v.symbol}" class="countdown">0/${MIN_DATA_POINTS} points</div>
+        <div id="signal-explanation-${v.symbol}" class="signal-explanation">Collecting market data...</div>
+        <div id="trade-advice-${v.symbol}" class="trade-advice">Waiting for sufficient data</div>
+      `;
+      container.appendChild(card);
+      
+      // Initialize chart for this symbol
+      const chart = new PriceChart(`chart-${v.symbol}`, v.symbol);
+      
+      dataStore[v.symbol] = {
+        closes: [],
+        previousPrice: null,
+        bbCalc: new BollingerBands(20, 2),
+        momentumCalc: new MomentumStrength(10),
+        tickCountCalc: new TickCountBias(100),
+        chart: chart,
+        lastSignal: null,
+        lastSignalTime: 0,
+        growthRate: v.growthRate,
+        symbolRanges: v.ranges,
+        ui: {
+          price: card.querySelector(`#price-${v.symbol}`),
+          momentum: card.querySelector(`#momentum-${v.symbol}`),
+          bbPosition: card.querySelector(`#bbPosition-${v.symbol}`),
+          bbSqueeze: card.querySelector(`#bbSqueeze-${v.symbol}`),
+          tickBias: card.querySelector(`#tickBias-${v.symbol}`),
+          tickSpeed: card.querySelector(`#tickSpeed-${v.symbol}`),
+          upTicks: card.querySelector(`#upTicks-${v.symbol}`),
+          downTicks: card.querySelector(`#downTicks-${v.symbol}`),
+          signalText: card.querySelector(`#signal-text-${v.symbol}`),
+          countdown: card.querySelector(`#countdown-${v.symbol}`),
+          explanation: card.querySelector(`#signal-explanation-${v.symbol}`),
+          tradeAdvice: card.querySelector(`#trade-advice-${v.symbol}`),
+          accumulatorInfo: card.querySelector(`#accumulator-info-${v.symbol}`),
+          chartOverlay: card.querySelector(`#chart-overlay-${v.symbol}`)
+        }
+      };
     });
-  </script>
+  }
+  
+  function connectWebSocket() {
+    updateStatus('connecting', 'Connected to Deriv Data Center');
+    
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    
+    if (ws) {
+      ws.onclose = null;
+      ws.close();
+    }
+    
+    try {
+      ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1');
+      
+      ws.onopen = () => {
+        updateStatus('connected', 'Connected to Deriv Data Center');
+        console.log('WebSocket connected successfully');
+        
+        volatilities.forEach(v => {
+          ws.send(JSON.stringify({ 
+            ticks: v.symbol, 
+            subscribe: 1 
+          }));
+        });
+      };
+      
+      ws.onmessage = e => {
+        try {
+          const data = JSON.parse(e.data);
+          if(data.msg_type === 'tick') {
+            handleTick(data.tick);
+          }
+        } catch(e) {
+          console.error('Error parsing message:', e);
+        }
+      };
+      
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+        updateStatus('disconnected', 'Disconnected - Using Simulated Data');
+        
+        if (!window.simulatedDataStarted) {
+          window.simulatedDataStarted = true;
+          startSimulatedData();
+        }
+        
+        if (event.code !== 1000) {
+          reconnectTimeout = setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            connectWebSocket();
+          }, 5000);
+        }
+      };
+      
+      ws.onerror = (e) => {
+        console.error('WebSocket error:', e);
+        updateStatus('disconnected', 'Connection Error - Using Simulated Data');
+        
+        if (!window.simulatedDataStarted) {
+          window.simulatedDataStarted = true;
+          startSimulatedData();
+        }
+      };
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      updateStatus('disconnected', 'Connection Failed - Using Simulated Data');
+      
+      if (!window.simulatedDataStarted) {
+        window.simulatedDataStarted = true;
+        startSimulatedData();
+      }
+    }
+  }
+  
+  function updateStatus(status, text) {
+    const el = document.getElementById('connection-status');
+    const textEl = document.getElementById('connection-text');
+    
+    el.className = `connection-status ${status}`;
+    
+    // Animate the connection text
+    animateText(textEl, text, 
+      status === 'connected' ? colorSchemes[currentColorScheme].statusColors :
+      status === 'connecting' ? ['#ff0', '#ffa500', '#ffff00'] :
+      ['#f00', '#ff4444', '#ff8888']
+    );
+  }
+  
+  function handleTick(tick) {
+    const { symbol, quote } = tick;
+    const d = dataStore[symbol];
+    if(!d) return;
+    
+    const price = parseFloat(quote);
+    
+    d.closes.push(price);
+    
+    if(d.closes.length > 100) {
+      d.closes.shift();
+    }
+    
+    d.ui.price.textContent = price.toFixed(4);
+    
+    // Update all indicators
+    const bb = d.bbCalc.update(price);
+    const momentum = d.momentumCalc.update(price);
+    const tickCount = d.tickCountCalc.update(price, d.previousPrice);
+    
+    d.previousPrice = price;
+    
+    // Update UI with indicator values
+    if (momentum) {
+      d.ui.momentum.textContent = `${momentum.direction} (${momentum.strength.toFixed(2)}%)`;
+      d.ui.tickSpeed.textContent = momentum.tickSpeed.toFixed(1) + '/s';
+    }
+    
+    if (bb) {
+      d.ui.bbPosition.textContent = bb.position;
+      d.ui.bbSqueeze.textContent = bb.isSqueeze ? 'YES' : 'NO';
+    }
+    
+    if (tickCount) {
+      d.ui.tickBias.textContent = tickCount.bias;
+      d.ui.upTicks.textContent = tickCount.upTicks;
+      d.ui.downTicks.textContent = tickCount.downTicks;
+    }
+    
+    d.ui.accumulatorInfo.textContent = 
+      `Range: ±${d.symbolRanges[d.growthRate]}% | Max Ticks: ${ACCUMULATOR_PARAMS.maxTicks}`;
+    
+    d.ui.countdown.textContent = `${d.closes.length}/${MIN_DATA_POINTS} points`;
+    
+    if (d.closes.length >= MIN_DATA_POINTS) {
+      generateMBTSignals(d, momentum, bb, tickCount);
+    } else {
+      const progress = Math.min(d.closes.length / MIN_DATA_POINTS, 1);
+      d.ui.signalText.textContent = `GATHERING DATA ${Math.round(progress * 100)}%`;
+      d.ui.signalText.className = 'signal-area signal-waiting';
+      d.ui.explanation.textContent = `Collecting data: ${d.closes.length}/${MIN_DATA_POINTS} points`;
+      d.ui.tradeAdvice.textContent = 'Need more market data for analysis';
+    }
+  }
+  
+  function generateMBTSignals(d, momentum, bb, tickCount) {
+    const currentTime = Date.now();
+    
+    // Check if we should maintain signal for 4 seconds
+    if (d.lastSignalTime > 0 && (currentTime - d.lastSignalTime) < SIGNAL_PERSISTENCE_TIME) {
+      return; // Don't process any further analysis during persistence period
+    }
+    
+    // Reset signal timer if persistence period is over
+    if (d.lastSignalTime > 0 && (currentTime - d.lastSignalTime) >= SIGNAL_PERSISTENCE_TIME) {
+      d.lastSignalTime = 0;
+    }
+    
+    let signal = 'NEUTRAL';
+    let signalStrength = 'REGULAR';
+    let explanation = '';
+    
+    // Apply M-B-T Strategy Logic
+    
+    // Condition 1: Momentum Up + Touch Lower Band + TickCount UpBias → STRONG HIGHER
+    if (momentum && momentum.direction === 'up' && 
+        bb && bb.isTouchingLower && 
+        tickCount && tickCount.bias === 'up' && tickCount.hasStrongBias) {
+      signal = 'HIGHER';
+      signalStrength = 'STRONG';
+      explanation = 'Momentum Up + Lower Band Touch + Strong Up Bias';
+    }
+    // Condition 2: Momentum Down + Touch Upper Band + TickCount DownBias → STRONG LOWER
+    else if (momentum && momentum.direction === 'down' && 
+             bb && bb.isTouchingUpper && 
+             tickCount && tickCount.bias === 'down' && tickCount.hasStrongBias) {
+      signal = 'LOWER';
+      signalStrength = 'STRONG';
+      explanation = 'Momentum Down + Upper Band Touch + Strong Down Bias';
+    }
+    // Condition 3: Bands Narrowing + TickCount Bias + Momentum Same Direction → MEDIUM
+    else if (bb && bb.isSqueeze && 
+             tickCount && tickCount.bias !== 'neutral' && 
+             momentum && ((tickCount.bias === 'up' && momentum.direction === 'up') || 
+                         (tickCount.bias === 'down' && momentum.direction === 'down'))) {
+      signal = tickCount.bias === 'up' ? 'HIGHER' : 'LOWER';
+      signalStrength = 'MEDIUM';
+      explanation = 'Band Squeeze + ' + (tickCount.bias === 'up' ? 'Up' : 'Down') + ' Bias + Momentum Confirmation';
+    }
+    // Condition 4: Mixed signals or no clear pattern → NEUTRAL
+    else {
+      signal = 'NEUTRAL';
+      signalStrength = 'NEUTRAL';
+      explanation = 'Mixed signals or no clear pattern';
+    }
+    
+    // Update UI based on signal
+    d.ui.explanation.textContent = explanation;
+    
+    if (signal === 'HIGHER') {
+      if (signalStrength === 'STRONG') {
+        d.ui.signalText.textContent = 'STRONG HIGHER';
+        d.ui.signalText.className = 'signal-area signal-strong-higher';
+        d.ui.tradeAdvice.textContent = 'HIGH CONFIDENCE - NEXT 5 TICKS HIGHER';
+      } else {
+        d.ui.signalText.textContent = 'HIGHER';
+        d.ui.signalText.className = 'signal-area signal-higher';
+        d.ui.tradeAdvice.textContent = 'MEDIUM CONFIDENCE - NEXT 5 TICKS HIGHER';
+      }
+      d.lastSignalTime = Date.now();
+    } 
+    else if (signal === 'LOWER') {
+      if (signalStrength === 'STRONG') {
+        d.ui.signalText.textContent = 'STRONG LOWER';
+        d.ui.signalText.className = 'signal-area signal-strong-lower';
+        d.ui.tradeAdvice.textContent = 'HIGH CONFIDENCE - NEXT 5 TICKS LOWER';
+      } else {
+        d.ui.signalText.textContent = 'LOWER';
+        d.ui.signalText.className = 'signal-area signal-lower';
+        d.ui.tradeAdvice.textContent = 'MEDIUM CONFIDENCE - NEXT 5 TICKS LOWER';
+      }
+      d.lastSignalTime = Date.now();
+    }
+    else {
+      d.ui.signalText.textContent = 'NEUTRAL';
+      d.ui.signalText.className = 'signal-area signal-neutral';
+      d.ui.tradeAdvice.textContent = 'No clear signal - Wait for better setup';
+    }
+    
+    // Update chart with trend analysis
+    const trendAnalysis = {
+      signal: signal,
+      strength: signalStrength
+    };
+    
+    d.chart.update(d.closes[d.closes.length - 1], trendAnalysis);
+    d.ui.chartOverlay.textContent = signal === 'NEUTRAL' ? 'ANALYZING' : signal;
+    d.ui.chartOverlay.className = `chart-overlay ${
+      signal === 'HIGHER' ? 'chart-trend-up' : 
+      signal === 'LOWER' ? 'chart-trend-down' : 
+      'chart-trend-range'
+    }`;
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Animate the main header
+    const headerText = document.getElementById('header-text');
+    animateText(headerText, 'M-B-T 5-TICK ACCUMULATOR ANALYZER', colorSchemes[currentColorScheme].colors);
+    
+    buildCards();
+    connectWebSocket();
+    
+    // Start color cycling
+    startColorCycling();
+    
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('growth-rate-btn')) {
+        const symbol = e.target.getAttribute('data-symbol');
+        const rate = parseInt(e.target.getAttribute('data-rate'));
+        
+        document.querySelectorAll(`[data-symbol="${symbol}"]`).forEach(btn => {
+          btn.classList.remove('active');
+        });
+        e.target.classList.add('active');
+        
+        if (dataStore[symbol]) {
+          dataStore[symbol].growthRate = rate;
+          dataStore[symbol].lastSignal = null;
+          dataStore[symbol].lastSignalTime = 0;
+          
+          const volatility = volatilities.find(v => v.symbol === symbol);
+          if (volatility) {
+            dataStore[symbol].ui.accumulatorInfo.textContent = 
+              `Range: ±${volatility.ranges[rate]}% | Max Ticks: ${ACCUMULATOR_PARAMS.maxTicks}`;
+          }
+        }
+      }
+    });
+  });
+})();
+</script>
 </body>
 <script>
   // disabling the right click
